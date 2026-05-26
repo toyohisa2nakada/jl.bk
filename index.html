@@ -43,6 +43,24 @@
 
 
 	<script>
+		function post(postData) {
+			// iuアカウントの マイドライブ - [非公開] プログラミング基礎実習 - Scratch課題の進捗収集
+			// スプレッドシートの拡張機能から、Apps ScriptでGASのコードが見れる
+			const gasURL = "https://script.google.com/macros/s/AKfycbzm0bQtRYheRxQMLMoTyMLvIKsK3g3xlzKR62e41dxiPWwqY-vP1AcMQBeb3a1oKJy7Zw/exec";
+
+			console.log("postData", postData);
+			fetch(gasURL, {
+				method: "POST",
+				mode: "no-cors",
+				headers: { "Content-Type": "text/plain" },
+				body: JSON.stringify(postData)
+			}).then(() => {
+				console.log("送信完了！スプレッドシートを確認してください。");
+			}).catch(err => {
+				console.error("エラー:", err);
+			});
+		}
+
 		var problems = new function () {
 			var self = this;
 			self.problems = [];
@@ -197,6 +215,15 @@
 					return true;
 				}
 				if (self.stepIndex === self.problems[self.problemIndexes.current].length - 1) {
+					console.log("問題のクリア: スプレッドシートに結果送信", self.problemIndexes.current);
+					post({
+						date: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+						kadaiId: self.problemIndexes.current,
+						loginId: window.exec({ module: "main", command: "getLoginId" }),
+						loginName: window.exec({ module: "main", command: "getLoginName" }),
+						success: "合格",
+					});
+
 					self.problemIndexes.lastFinished = Math.max(self.problemIndexes.current, self.problemIndexes.lastFinished);
 					self.problemIndexes.current++;
 					self.problemIndexes.lastOpened = Math.max(self.problemIndexes.current, self.problemIndexes.lastOpened);

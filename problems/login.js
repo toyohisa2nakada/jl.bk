@@ -7,8 +7,8 @@ var loginJs = new function(){
 		if(/[sc]\d{5}[a-z]{2}/.test(id)===false){
 			$("#loginMessage").text("ログインIDが正しくありません。windowsにログインするsから始まる文字を入力してください。");
 */
-		if(/\d{8}/.test(id)===false){
-			$("#loginMessage").text("学籍番号が正しくありません。8文字の半角数字で入力してください。");
+		if (/^\d{2}IM\d{4}$/i.test(id)===false) {
+			$("#loginMessage").text("学籍番号が正しくありません。例 25IM0000 のように入力してください。");
 			return;
 		}
 		var name = $("#loginName").val();
@@ -39,7 +39,6 @@ var loginJs = new function(){
 
 			var w = window.innerWidth+800,
 				h = window.innerHeight+800;
-//console.log($.cookie("loginId"));
 			if($.cookie("loginId")===undefined || $.cookie("loginId")===""){
 				var tds = " style=\"padding:10px\" ";
 				$("body").append(
@@ -94,7 +93,7 @@ var loginJs = new function(){
 									"<td"+tds+"><input id=\"loginName\"></input></td>"+
 								"</tr>"+
 								"<tr>"+
-									"<td"+tds+">学籍番号<br /><span style=\"font-size:x-small\">(例 32019000)</span></td>"+
+									"<td"+tds+">学籍番号<br /><span style=\"font-size:x-small\">(例 25IM0000)</span></td>"+
 									"<td"+tds+"><input id=\"loginId\" type=\"text\" maxlength=\"8\"></input></td>"+
 								"</tr>"+
 							"</table>"+

@@ -105,7 +105,7 @@ print(b);\
 		},
 		function(){
 			$("body").instruct({
-				string:"よくできました。授業のホームページを参照し、次の課題に移ってください。",
+				string:"よくできました。",
 				align:'center',
 				arrow:false,
 				offsetX:$("body").width()/2,
