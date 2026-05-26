@@ -5,9 +5,7 @@
 	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 <!--
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 -->
-	<script src="jquery.cookie.js"></script>
 
 	<link rel="stylesheet" href="lib/codemirror/codemirror.css">
 	<script src="lib/codemirror/codemirror.js"></script>
@@ -160,9 +158,13 @@
 		// ms
 		var runInterval = 400;
 
+		function lsSet(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+		function lsGet(key) { var v = localStorage.getItem(key); if (v === null) return undefined; try { return JSON.parse(v); } catch(e) { return v; } }
+		function lsRemove(key) { localStorage.removeItem(key); }
+		function lsEach(fn) { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function(k){ fn(k, lsGet(k)); }); }
+
 		var disk = new function(){
 			var self = this;
-			$.cookie.json = true;
 			self.headerTitle = "editing.";
 			self.cookieExpiredDate = new Date();
 			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
@@ -174,12 +176,12 @@
 				self.header = self.headerTitle+self.pnumber;
 			}
 			self.removeAll = function(){
-				$.each($.cookie(),function(name,value){
+				lsEach(function(name,value){
 					if((new RegExp("^"+self.headerTitle)).test(name)){
-						$.removeCookie(name);
+						lsRemove(name);
 					}
 				});
-				$.removeCookie(self.headerTitle+"runInterval");
+				lsRemove(self.headerTitle+"runInterval");
 			}
 			self.remove = function(pnumber){
 				if(pnumber===undefined){
@@ -188,9 +190,9 @@
 				if(pnumber===undefined){
 					return;
 				}
-				$.each($.cookie(),function(name,value){
+				lsEach(function(name,value){
 					if((new RegExp("^"+self.headerTitle+pnumber)).test(name)){
-						$.removeCookie(name);
+						lsRemove(name);
 					}
 				});
 			}
@@ -199,7 +201,7 @@
 				if(self.pnumber === undefined){
 					return false;
 				}
-				var txt = $.cookie(self.header);
+				var txt = lsGet(self.header);
 //console.log("load "+self.header);
 				if(txt === undefined){
 					return false;
@@ -207,13 +209,13 @@
 				var pnumber_bk = self.pnumber;
 				self.pnumber = undefined;
 				jsEditor.getDoc().setValue(txt);
-				var marker_n = $.cookie(self.header+"MarkerN")||0;
+				var marker_n = lsGet(self.header+"MarkerN")||0;
 				for(var i=0;i<marker_n;i++){
-					var mk = $.cookie(self.header+"Marker"+i);
+					var mk = lsGet(self.header+"Marker"+i);
 					jsEditor.markText(mk.from,mk.to,mk);
 				}
 				self.pnumber = pnumber_bk;
-				runInterval = $.cookie(self.headerTitle+"runInterval");
+				runInterval = lsGet(self.headerTitle+"runInterval");
 //console.log("load runInterval "+runInterval);
 				$("#runInterval").val(1/runInterval);
 				return true;
@@ -223,7 +225,7 @@
 				if(self.pnumber === undefined){
 					return;
 				}
-				$.cookie(self.header,jsEditor.getDoc().getValue(),{expires:self.cookieExpiredDate});
+				lsSet(self.header, jsEditor.getDoc().getValue());
 				var markers = jsEditor.getDoc().getAllMarks();
 				var savedMarkerN = 0;
 				markers.forEach(function(m,i){
@@ -232,12 +234,12 @@
 						Object.keys(markerDefault).forEach(function(key){
 							mkr[key] = m[key]===undefined?markerDefault[key]:m[key];
 						});
-						$.cookie(self.header+"Marker"+i,mkr,{expires:self.cookieExpiredDate});
+						lsSet(self.header+"Marker"+i, mkr);
 						savedMarkerN++;
 					}
 				});
-				$.cookie(self.header+"MarkerN",savedMarkerN,{expires:self.cookieExpiredDate});
-				$.cookie(self.headerTitle+"runInterval",runInterval,{expires:self.cookieExpiredDate});
+				lsSet(self.header+"MarkerN", savedMarkerN);
+				lsSet(self.headerTitle+"runInterval", runInterval);
 /* for 50 problems */
 			}
 		};

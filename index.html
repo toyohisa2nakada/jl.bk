@@ -20,10 +20,6 @@
 	<title>JavaScript Learning Support Tool</title>
 	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-	<!--
-	<script src="jquery.cookie.js"></script>
--->
 
 	<script src="jquery.instruct.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
@@ -60,6 +56,13 @@
 				console.error("エラー:", err);
 			});
 		}
+
+		function lsSet(key, val) { localStorage.setItem(key, val); }
+		function lsGet(key) { var v = localStorage.getItem(key); return v === null ? undefined : v; }
+		function lsRemove(key) { localStorage.removeItem(key); }
+		function lsEach(fn) { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function (k) { fn(k, localStorage.getItem(k)); }); }
+
+		var lsUrlPrefix = (new URLSearchParams(window.location.search).get("path") || window.location.pathname) + ":";
 
 		var problems = new function () {
 			var self = this;
@@ -114,9 +117,9 @@
 					});
 			}
 			self.removeAllAddedScriptCookies = function () {
-				$.each($.cookie(), function (name, value) {
+				lsEach(function (name, value) {
 					if ((new RegExp("^" + "problem.addedScript.")).test(name)) {
-						$.removeCookie(name);
+						lsRemove(name);
 					}
 				});
 			}
@@ -156,7 +159,7 @@
 			}
 			self.load = function () {
 				var scNames = [];
-				$.each($.cookie(), function (name, value) {
+				lsEach(function (name, value) {
 					var ret = name.match(new RegExp("problem\\.addedScript\\.([^\.]*)"));
 					if (ret !== null) {
 						/*
@@ -173,7 +176,7 @@
 					cnt++;
 					if (cnt >= scNames.length) {
 						Object.keys(self.problemIndexes).forEach(function (elem) {
-							var index = $.cookie("problemIndexes." + elem);
+							var index = lsGet(lsUrlPrefix + "problemIndexes." + elem);
 							if (index !== undefined) {
 								self.problemIndexes[elem] = Number(index);
 							}
@@ -191,11 +194,11 @@
 			}
 			self.save = function () {
 				Object.keys(self.problemIndexes).forEach(function (elem) {
-					$.cookie("problemIndexes." + elem, self.problemIndexes[elem], { expires: main.cookieExpiredDate });
+					lsSet(lsUrlPrefix + "problemIndexes." + elem, self.problemIndexes[elem]);
 				});
 				self.removeAllAddedScriptCookies();
 				Object.keys(self.addedScripts).forEach(function (elem, i) {
-					$.cookie("problem.addedScript." + elem, self.addedScripts[elem], { expires: main.cookieExpiredDate });
+					lsSet("problem.addedScript." + elem, self.addedScripts[elem]);
 					//console.log(elem+":"+self.addedScripts[elem]);
 				});
 			}
@@ -217,7 +220,7 @@
 				if (self.stepIndex === self.problems[self.problemIndexes.current].length - 1) {
 					console.log("問題のクリア: スプレッドシートに結果送信", self.problemIndexes.current);
 					post({
-						date: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+						path: lsUrlPrefix,
 						kadaiId: self.problemIndexes.current,
 						loginId: window.exec({ module: "main", command: "getLoginId" }),
 						loginName: window.exec({ module: "main", command: "getLoginName" }),
@@ -342,6 +345,17 @@
 	<script src="problems/login.js"></script>
 	<!-- <script src="problems/spi.js"></script> -->
 
+	<!-- <script src="problems/inf_course_2016/d20161013/hints.js"></script>
+	<script src="problems/inf_course_2016/d20161013/01.js"></script>
+	<script src="problems/inf_course_2016/d20161013/02.js"></script>
+	<script src="problems/inf_course_2016/d20161013/03.js"></script>
+	<script src="problems/inf_course_2016/d20161013/04.js"></script>
+	<script src="problems/inf_course_2016/d20161013/05.js"></script>
+	<script src="problems/inf_course_2016/d20161013/06.js"></script>
+	<script src="problems/inf_course_2016/d20161013/07.js"></script>
+	<script src="problems/inf_course_2016/d20161013/08.js"></script>
+	<script src="problems/inf_course_2016/d20161013/09.js"></script>
+	<script src="problems/inf_course_2016/d20161013/10.js"></script>
 
 	<script src="problems/mgr_course_2017/d20170427/hints.js"></script>
 	<script src="problems/mgr_course_2017/d20170427/01.js"></script>
@@ -352,8 +366,65 @@
 	<script src="problems/mgr_course_2017/d20170427/06.js"></script>
 	<script src="problems/mgr_course_2017/d20170427/07.js"></script>
 	<script src="problems/mgr_course_2017/d20170427/08.js"></script>
-	<script src="problems/mgr_course_2017/d20170427/09.js"></script>
+	<script src="problems/mgr_course_2017/d20170427/09.js"></script> -->
 	<!-- -->
+
+	<script>
+		function loadScriptsSync() {
+			// URLからパラメータを取得（例: ?path=problems/mgr_course_2017/d20170427）
+			const urlParams = new URLSearchParams(window.location.search);
+			const pathParam = urlParams.get('path');
+
+			// パラメータが指定されていない場合は処理を中断
+			if (!pathParam) {
+				console.error('URLパラメータ "path" が指定されていません。');
+				return;
+			}
+
+			// 末尾にスラッシュがなければ付与してベースURLを設定
+			const baseUrl = pathParam.endsWith('/') ? pathParam : `${pathParam}/`;
+
+			// 1. 最初に hints.js を同期読み込み
+			const hintSuccess = loadSingleScriptSync(`${baseUrl}hints.js`);
+			if (!hintSuccess) return;
+
+			// 2. 01.js から順にエラーになるまで同期読み込み
+			let fileNumber = 1;
+			while (true) {
+				const fileName = String(fileNumber).padStart(2, '0') + '.js';
+				const fileUrl = `${baseUrl}${fileName}`;
+				console.log("loading ", fileUrl)
+
+				const success = loadSingleScriptSync(fileUrl);
+				if (!success) {
+					break;
+				}
+				fileNumber++;
+			}
+		}
+
+		function loadSingleScriptSync(url) {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', url, false); // 同期通信
+
+			try {
+				xhr.send();
+				if (xhr.status === 200) {
+					const script = document.createElement('script');
+					script.dataset.src = url;
+					script.textContent = xhr.responseText;
+					document.head.appendChild(script);
+					return true;
+				}
+			} catch (e) {
+				// エラー処理
+			}
+			return false;
+		}
+
+		// 実行
+		loadScriptsSync();
+	</script>
 
 
 
@@ -623,15 +694,15 @@
 				main.socket?.emit("status", params);
 			},
 			updateProblems: function (params) {
-				var up = $.extend({ userid: $.cookie("loginId"), username: $.cookie("loginName") }, params);
+				var up = $.extend({ userid: lsGet("loginId"), username: lsGet("loginName") }, params);
 				//console.log("updateProblems",up);
 				main.socket?.emit("updateProblems", up);
 			},
 			getLoginId: function () {
-				return $.cookie("loginId") || "";
+				return lsGet("loginId") || "";
 			},
 			getLoginName: function () {
-				return $.cookie("loginName") || "";
+				return lsGet("loginName") || "";
 			},
 			setLoginId: function (params) {
 				//console.log("setLoginId ("+params.userid+") ("+params.username+")");
@@ -639,8 +710,8 @@
 				Object.keys(params).forEach(function (elem) {
 					main.loginInfo[elem] = params[elem];
 				});
-				$.cookie("loginId", params.userid, { expires: main.cookieExpiredDate });
-				$.cookie("loginName", params.username, { expires: main.cookieExpiredDate });
+				lsSet("loginId", params.userid);
+				lsSet("loginName", params.username);
 				$("#toolboxLoginName").text(params.username + " (" + params.userid + ")");
 			},
 			writeLog: function (params) {
@@ -722,8 +793,8 @@
 			})) {
 				exec({
 					module: "main", command: "setLoginId", params: {
-						userid: $.cookie("loginId") || "",
-						username: $.cookie("loginName") || "",
+						userid: lsGet("loginId") || "",
+						username: lsGet("loginName") || "",
 					}
 				});
 				var st = function () {
@@ -815,7 +886,7 @@
 			self.logoff = function () {
 				if (confirm("全ての回答を削除してログインし直します。よろしいですか？")) {
 					$("body").clearInstruct();
-					$.removeCookie("loginId");
+					lsRemove("loginId");
 					["input", "code", "output"].forEach(function (elem) {
 						window.exec({ module: elem, command: "autoSave", params: { pnumber: undefined } });
 					});

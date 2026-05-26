@@ -4,13 +4,17 @@
 
 	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 
 	<script src="jquery.instruct.js"></script>
 	<script src="utils.js"></script>
 	<script src="lib/socket.io-client/socket.io.js"></script>
 	<script src="lib/snowfall/snowfall.jquery.js"></script>
 	<script>
+		function lsSet(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+		function lsGet(key) { var v = localStorage.getItem(key); if (v === null) return undefined; try { return JSON.parse(v); } catch(e) { return v; } }
+		function lsRemove(key) { localStorage.removeItem(key); }
+		function lsEach(fn) { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function(k){ fn(k, lsGet(k)); }); }
+
 		var problems = new function(){
 			var self = this;
 			self.scripts = {};
@@ -19,19 +23,18 @@
 			self.numberOfCleared = 17;
 			self.numberOfCols = 21;
 
-			$.cookie.json = true;
 			self.cookieExpiredDate = new Date();
 			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
 
 			self.clear = function(){
-				$.each($.cookie(),function(name,value){
+				lsEach(function(name,value){
 					if((new RegExp("^"+self.cookieTitle)).test(name)){
-						$.removeCookie(name);
+						lsRemove(name);
 					}
 				});
 			}
 			self.load = function(){
-				$.each($.cookie(),function(name,value){
+				lsEach(function(name,value){
 					var ret = name.match(new RegExp(self.cookieTitle+"([^:]*):(.*)"));
 					if(ret !== null){
 						var name = ret[1];
@@ -45,7 +48,7 @@
 			self.save = function(){
 				for(var name in self.scripts){
 					for(var key in self.scripts[name]){
-						$.cookie(self.cookieTitle+name+":"+key,self.scripts[name][key],{expires:self.cookieExpiredDate});
+						lsSet(self.cookieTitle+name+":"+key, self.scripts[name][key]);
 					}
 				}
 			}

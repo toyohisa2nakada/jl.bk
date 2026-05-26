@@ -1,5 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
+console.log("01.js",scriptName)
 	var errorMessages = ["違います。"];
 	var errorNo = 0;
 

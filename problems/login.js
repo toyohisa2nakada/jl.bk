@@ -3,10 +3,6 @@ var loginJs = new function(){
 	var scriptName = plib.getScriptName();
 	self.login = function(){
 		var id = $("#loginId").val();
-/*
-		if(/[sc]\d{5}[a-z]{2}/.test(id)===false){
-			$("#loginMessage").text("ログインIDが正しくありません。windowsにログインするsから始まる文字を入力してください。");
-*/
 		if (/^\d{2}IM\d{4}$/i.test(id)===false) {
 			$("#loginMessage").text("学籍番号が正しくありません。例 25IM0000 のように入力してください。");
 			return;
@@ -39,54 +35,12 @@ var loginJs = new function(){
 
 			var w = window.innerWidth+800,
 				h = window.innerHeight+800;
-			if($.cookie("loginId")===undefined || $.cookie("loginId")===""){
+			if(localStorage.getItem("loginId")===null || localStorage.getItem("loginId")===""){
 				var tds = " style=\"padding:10px\" ";
 				$("body").append(
 					"<div id=\"loginPanel\" style=\"z-index:999;background:white;width:"+
 					w+"px;height:"+h+"px;position:absolute;left:-400px;top:-400px;display:table;\">"+
 						"<div id=\"login\" style=\"width:50%;margin:0 auto;text-align:center;display:table-cell;vertical-align:middle;\">"+
-
-/*
-"<div><h3>本日(7/16)の情報システム演習2 J4クラスでは、このサイトは使用しません。</h3></div>"+
-"<div><h3><a href='https://www.nuis.ac.jp/~nakada/lectures/sys_prac/'>授業のホームページ</a>に戻ってください。</h3></div>"+
-"<div style=\"margin:40px;\"></div>"+
-*/
-/*
-"<div><h1>情報システム演習2 J4クラス 今後の授業スケジュール</h1></div>"+
-"				<div style=\"margin:10px;\">"+
-"					<table align=\"center\" border=\"1\">"+
-"						<tr>"+
-"							<th>日付</th><th>内容</th><th>WebExへの接続</th>"+
-"						</tr>"+
-"						<tr>"+
-"							<td>7/9</td><td>JavaScript演習とHTML改造（これまで通り）</td><td>質問なければ接続不要</td>"+
-"						</tr>"+
-"						<tr>"+
-"							<td>7/16</td><td>自由課題（独自のHTMLファイルを作成する）：作業日</td><td>中田まで（やり方の説明）</td>"+
-"						</tr>"+
-"						<tr>"+
-"							<td>7/23</td><td>自由課題（独自のHTMLファイルを作成する）：提出日</td><td>質問なければ接続不要</td>"+
-"						</tr>"+
-"						<tr>"+
-"							<td>7/30</td><td>B分野部分<span style=\"font-size:x-small;\">(教科書はこのページにあります。)</span></td><td>上西園先生</td>"+
-"						</tr>"+
-"						<tr>"+
-"							<td>8/6</td><td>B分野部分<span style=\"font-size:x-small;\">(教科書はこのページにあります。)</span></td><td>上西園先生</td>"+
-"						</tr>"+
-"					</table>"+
-"					<div>※自由課題の発表会や展覧会などは実施いたしません。自分の課題が他者に見られることはありません。</div>"+
-"				</div>"+
-"               <div style=\"margin:40px;\"></div>"+
-"<div style=\"color:blue;font-size:x-large;\">最初に、<a href=\"https://bit.ly/zaigaku2020\" target=\"_blank\">在学生アンケート<span style=\"font-size:xx-small;\">(ここをクリックする)</span></a>へのご協力をお願いいたします。</div>"+
-"<div style=\"margin:4px;\"></div>"+
-"<div style=\"color:blue;\">全学生が対象のアンケートです。</div>"+
-"<div style=\"margin:20px;\"></div>"+
-"               <div style=\"color:blue;font-size:x-large;\">来週の7/16は、13:10にwebexで中田までつなげてください。</div>"+
-"               <div style=\"color:blue;\">自由課題のやり方を説明いたします。</div>"+
-"               <div style=\"margin:40px;\"></div>"+
-*/
-
-
 							"<table align=\"center\" border=\"1\" style=\"border-collapse: collapse;\">"+
 								"<tr>"+
 									"<td"+tds+">氏名<br /><span style=\"font-size:x-small\">(例 情報 太郎)</span></td>"+

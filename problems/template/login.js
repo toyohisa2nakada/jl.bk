@@ -35,7 +35,7 @@ var loginJs = new function(){
 
 			var w = window.innerWidth+800,
 				h = window.innerHeight+800;
-			if($.cookie("loginId")===undefined || $.cookie("loginId")===""){
+			if(localStorage.getItem("loginId")===null || localStorage.getItem("loginId")===""){
 				var tds = " style=\"padding:10px\" ";
 				$("body").append(
 					"<div id=\"loginPanel\" style=\"z-index:999;background:white;width:"+
