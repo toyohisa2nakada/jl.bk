@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8" />
+
+	<title>SPI form receiver</title>
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+</head>
+<body>
+	<a href="https://www.pecode.com/jl/index.html">Javascript演習</a>
+	<div id="url"></div>
+	<script>
+		var params = [...new URLSearchParams(location.search).entries()].reduce((obj,e)=>({...obj,[e[0]]:e[1]}),{})
+		$("#url").append(params["q"]);
+	</script>
+</body>
+</html>
+
+
+

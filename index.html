@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-168086162-2"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', 'UA-168086162-2');
+	</script>
+
+	<meta charset="UTF-8" />
+
+<!--
+	<meta http-equiv="refresh" content="0;URL=waiting.html">
+-->
+
+	<title>JavaScript Learning Support Tool</title>
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<!--
+	<script src="jquery.cookie.js"></script>
+-->
+
+	<script src="jquery.instruct.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+<!--
+	<script src="lib/socket.io-client/socket.io.js"></script>
+-->
+	<script src="utils.js"></script>
+	<script src="plib.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="lib/colorbox/colorbox.css" />
+	<script src="lib/colorbox/jquery.colorbox-min.js"></script>
+	<script src="lib/snowfall/snowfall.jquery.js"></script>
+
+	<!-- lightbox2 (image) -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+
+
+	<script>
+		var problems = new function(){
+			var self = this;
+			self.problems = [];
+			self.problemIndexes = {};
+			self.stepIndex;
+			self.noShowButtonIndexes = [];
+			self.addedScripts = {};
+
+			self.clear = function(){
+				self.problems = [];
+				self.noShowButtonIndexes = [];
+				self.initIndexes();
+			}
+			self.getAddedScriptName = function(index){
+				return self.addedScripts[index||self.problemIndexes.current];
+			}
+			self.isLastProblem = function(){
+				return self.problemIndexes.current===self.problems.length-1;
+			}
+			self.isFinishedProblem = function(){
+				return self.problemIndexes.current <= self.problemIndexes.lastFinished;
+			}
+			self.getAddedScriptIndex = function(name){
+				for(var i in self.addedScripts){
+					if(self.addedScripts[i]===name){
+						return i;
+					}
+				}
+				return -1;
+			}
+			self.addScript = function(scriptName){
+				self.addScriptIn(scriptName,function(){
+					self.restart(self.problems.length-1);
+					self.save();
+					self.panel.init();
+				});
+			}
+			self.addScriptIn = function(scriptName,onComplete){
+				plib.setScriptName(scriptName);
+				$.getScript(scriptName)
+				.done(function(script,textStatus){
+					plib.unsetScriptName();
+					self.addedScripts[self.problems.length-1] = scriptName;
+					if(onComplete){
+						onComplete();
+					}
+				})
+				.fail(function(jqxhr,setting,exception){
+					alert("読み込みに失敗しました。スクリプト名を確認してみてください。スクリプト名の入力例： 001.js");
+					plib.unsetScriptName();
+				});
+			}
+			self.removeAllAddedScriptCookies = function(){
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+"problem.addedScript.")).test(name)){
+						$.removeCookie(name);
+					}
+				});
+			}
+			self.removeAllAddedScripts = function(){
+				self.removeAllAddedScriptCookies();
+				for(var i=self.problems.length-1;i>=0;i--){
+					if(self.addedScripts[i]!==undefined){
+						self.problems.splice(i,1);
+					}
+				}
+				self.addedScripts = {};
+			}
+			self.removeAddedScript = function(){
+				self.problemIndexes.lastOpened = Math.max(0,self.problemIndexes.lastOpened-1);
+				self.problemIndexes.current = Math.max(0,self.problemIndexes.current-1);
+				delete self.addedScripts[self.problems.length-1];
+				self.problems.splice(self.problems.length-1,1);
+				self.removeAllAddedScriptCookies();
+				self.save();
+				self.panel.init();
+/*
+console.log("---after remove");
+Object.keys(self.addedScripts).forEach(function(elem,i){
+	console.log(elem+":"+self.addedScripts[elem]);
+});
+*/
+			}
+			self.initIndexes = function(){
+				self.problemIndexes.current = 0;
+				self.problemIndexes.lastOpened = 0;
+				self.problemIndexes.lastFinished = -1;
+				self.stepIndex = -1;
+			}
+			self.setAllFinished = function(){
+				self.problemIndexes.lastOpened = self.problems.length;
+				self.problemIndexes.lastFinished = self.problems.length-1;
+			}
+			self.load = function(){
+				var scNames = [];
+				$.each($.cookie(),function(name,value){
+					var ret = name.match(new RegExp("problem\\.addedScript\\.([^\.]*)"));
+					if(ret !== null){
+/*
+console.log("name",name);
+console.log("value",value);
+console.log("ret",ret);
+*/
+						var index = ret[1];
+						scNames.push(value);
+					}
+				});
+				var cnt = 0;
+				var f = function(){
+					cnt++;
+					if(cnt >= scNames.length){
+						Object.keys(self.problemIndexes).forEach(function(elem){
+							var index = $.cookie("problemIndexes."+elem);
+							if(index !== undefined){
+								self.problemIndexes[elem] = Number(index);
+							}
+						});
+						setModule({"name":"main","window":window,"commands":commands});
+					}else{
+						self.addScriptIn(scNames[cnt],f);
+					}
+				}
+				if(scNames.length===0){
+					f();
+				}else{
+					self.addScriptIn(scNames[cnt],f);
+				}
+			}
+			self.save = function(){
+				Object.keys(self.problemIndexes).forEach(function(elem){
+					$.cookie("problemIndexes."+elem,self.problemIndexes[elem],{expires:main.cookieExpiredDate});
+				});
+				self.removeAllAddedScriptCookies();
+				Object.keys(self.addedScripts).forEach(function(elem,i){
+					$.cookie("problem.addedScript."+elem,self.addedScripts[elem],{expires:main.cookieExpiredDate});
+//console.log(elem+":"+self.addedScripts[elem]);
+				});
+			}
+			self.noShowButton = function(n){
+				self.noShowButtonIndexes.push(n);
+			}
+			self.isShowButton = function(i){
+				return -1===self.noShowButtonIndexes.indexOf(i);
+			}
+			self.isFinished = function(){
+				return self.problemIndexes.lastFinished === self.problems.length-1;
+			}
+			self.next = function(){
+//console.log(self.problemIndexes.current,self.problems.length);
+				if(self.problemIndexes.current === self.problems.length){
+					console.log("既に問題終了");
+					return true;
+				}
+				if(self.stepIndex === self.problems[self.problemIndexes.current].length-1){
+					self.problemIndexes.lastFinished = Math.max(self.problemIndexes.current,self.problemIndexes.lastFinished);
+					self.problemIndexes.current++;
+					self.problemIndexes.lastOpened = Math.max(self.problemIndexes.current,self.problemIndexes.lastOpened);
+					self.stepIndex = -1;
+					self.panelUpdate();
+				}
+				self.save();
+				self.stepIndex++;
+				if(self.problemIndexes.current === self.problems.length){
+					console.log("すべての問題終了");
+					main.events.call("allProblemsFinished");
+					return true;
+				}else{
+					return self.problems[self.problemIndexes.current][self.stepIndex]();
+				}
+			}
+			self.prev = function(){
+				self.stepIndex = Math.max(self.stepIndex-1,0);
+				return self.problems[self.problemIndexes.current][self.stepIndex]();
+			}
+			self.panelUpdate = function(){
+				if(self.panel!==undefined){
+					self.panel.update();
+				}
+			}
+			self.restart = function(problemIndex){
+				exec({module:"code",command:"stop"});
+				exec({module:"main",command:"clearInstruct"});
+//console.log("restart",problemIndex);
+				self.problemIndexes.current = problemIndex;
+				self.problemIndexes.lastOpened = Math.max(self.problemIndexes.lastOpened,self.problemIndexes.current);
+				self.stepIndex = -1;
+				self.panelUpdate();
+				self.next();
+			}
+			self.restartAll = function(){
+				self.initIndexes();
+				self.panel.init();
+				self.panelUpdate();
+				self.next();
+			}
+			self.setPanel = function(panel){
+				self.panel = panel;
+			}
+			self.clear();
+		};
+		function ProblemsPanel(problems,sel){
+			var self = this;
+			self.problems = problems;
+			self.problems.setPanel(self);
+			self.sel = sel;
+			self.init = function(){
+				$(".problemButton").remove();
+				for(var i=0,pi=0;i<self.problems.problems.length;i++){
+					var disp = self.problems.isShowButton(i);
+//console.log("problemsPanel init i="+i+" disp="+disp);
+					$("#problemsPanel").append(
+						"<a href=\"javascript:problems.restart("+i+")\" id=\"problemButton"+i+"\" "+
+						"class=\"problemButton\" "+
+						"style=\"display:"+(disp?"inline-block":"none")+"\">"+
+						(pi+1)+"</a>");
+					if(disp){
+						pi++;
+					}
+				}
+				self.update();
+			}
+			self.update = function(){
+				self.problems.problems.forEach(function(elem,i){
+					var pevents = "auto";
+					var bkcol = "#f0f0f0";
+					if(i===self.problems.problemIndexes.current){
+						bkcol = "#9EDB59";
+					}else if(i<=self.problems.problemIndexes.lastFinished){
+						bkcol = "#888800";//"darkblue";
+					}else if(i===self.problems.problemIndexes.lastOpened){
+						bkcol = "lightblue";
+					}else{
+						pevents = "none";
+					}
+					$("#problemButton"+i).css({"pointer-events":pevents,background:bkcol});
+				});
+			}
+		};
+		var problemsPanel = new ProblemsPanel(problems,"problemsPanel");
+	</script>
+	<!-- problem scripts are here -->
+<!--
+	smartphone check
+	<script src="problems/smartphone/20160630_1.js"></script>
+-->
+
+<!-- 50_problems hints
+	<script src="problems/50/hints.js"></script>
+-->
+
+
+<!-- オープンキャンパス用 -->
+	<script src="problems/autoLogin.js"></script>
+	<script src="problems/nologin.js"></script>
+	<script src="problems/inf_course_2016/d20161013/hints.js"></script>
+	<script src="problems/inf_course_2016/d20161013/01.js"></script>
+	<script src="problems/inf_course_2016/d20161013/02.js"></script>
+	<script src="problems/inf_course_2016/d20161013/03.js"></script>
+	<script src="problems/inf_course_2016/d20161013/04.js"></script>
+	<script src="problems/inf_course_2016/d20161013/05.js"></script>
+	<script src="problems/inf_course_2016/d20161013/06.js"></script>
+	<script src="problems/inf_course_2016/d20161013/07.js"></script>
+	<script src="problems/inf_course_2016/d20161013/08.js"></script>
+	<script src="problems/inf_course_2016/d20161013/09.js"></script>
+	<script src="problems/inf_course_2016/d20161013/10.js"></script>
+<!-- -->
+
+
+<!-- 2021年前期の最後(2021.06.24)に行ったとき
+	<script src="problems/login.js"></script>
+	<script src="problems/spi.js"></script>
+
+
+<script src="problems/mgr_course_2017/d20170713/hints.js"></script>
+<script src="problems/mgr_course_2017/d20170713/01.js"></script>
+<script src="problems/mgr_course_2017/d20170713/02.js"></script>
+<script src="problems/mgr_course_2017/d20170713/03.js"></script>
+<script src="problems/mgr_course_2017/d20170713/04.js"></script>
+<script src="problems/mgr_course_2017/d20170713/05.js"></script>
+<script src="problems/mgr_course_2017/d20170713/06.js"></script>
+<script src="problems/mgr_course_2017/d20170713/07.js"></script>
+<script src="problems/mgr_course_2017/d20170713/08.js"></script>
+<script src="problems/mgr_course_2017/d20170713/09.js"></script>
+-->
+
+
+
+	<style>
+		body {
+			background: #e8e8e8;
+			overflow: hidden;
+			position: relative;
+			margin: 0px;
+			padding: 8px;
+		}
+		a {
+			background: #f0f0f0;
+			color: #0f0f0f;
+			border:solid 1px;
+			margin: 0px 1px;
+			padding: 2px 4px;
+			text-decoration: none;
+		}
+		div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, textarea, p, blockquote, th, td {
+			margin: 0;
+			padding: 0;
+		}
+		fieldset{
+			border: 0 none;
+		}
+		#TopPanel
+		{
+			background: #2a4073;
+			color: #ffffff;
+			height: 28px;
+			margin: 0px 0px 5px;
+			width: 100%;
+			display: table;
+		}
+		#topPanelContents
+		{
+			padding-top: 0px;
+			padding-left: 10px;
+			padding-right: 0px;
+			font-weight: bold;
+		}
+		#problemsPanel
+		{
+			padding-left: 10px;
+			padding-right: 10px;
+		}
+		.problemButton
+		{
+			font-size: xx-small;
+		}
+		#toolboxButtonPanel
+		{
+			float: right;
+			margin-right: 6px;
+		}
+		#BottomPanel
+		{
+			font-size: xx-small;
+			overflow: hidden;
+			width: 100%;
+			text-align: right;
+			display: table;
+		}
+		.panelTableContents
+		{
+			display:table-cell;
+			vertical-align: middle;
+		}
+		#LeftPanel
+		{
+			width: 25%;
+			float: left;
+		}
+		#CenterPanel
+		{
+			width: 55%;
+			float: left;
+		}
+		#RightPanel
+		{
+			width: 20%;
+			float: right;
+		}
+		#content
+		{
+		}
+		.handler_vertical {
+			cursor: col-resize;
+			width: 8px;
+			float: left;
+		}
+		.handler_horizontal {
+			cursor: row-resize;
+			height: 8px;
+			width: 100%;
+			float: left;
+		}
+		.window {
+			border: 1px solid #2a4073;
+			width: 100%;
+			float: left;
+		}
+		.top {
+			height: 18%;
+		}
+		.bottom {
+			height: 82%;
+		}
+		.top_center{
+			height: 18%;
+		}
+		.bottom_center {
+			height: 82%;
+		}
+	</style>
+
+	<script>
+		$(function(){
+			window.onresize = resize;
+			resize();
+
+			function resize() {
+				var h = (window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight));
+				var divHight = 16 + $("#div_left").height();//16=body padding:8px
+				divHight += $("#TopPanel").height() + parseInt($("#TopPanel").css("margin-bottom"), 10);
+				divHight += $("#BottomPanel").height() ;
+				$("#content").css({ "min-height": h - divHight + "px" });
+				$("#div_left_vertical").css({ "height": h - divHight + "px" });
+				$("#div_right_vertical").css({ "height": h - divHight + "px" });
+
+				divHight += 12;
+
+				$("#LeftPanel").css({ "height": h - divHight + "px" });
+				$("#CenterPanel").css({ "height": h - divHight + "px" });
+				$("#RightPanel").css({
+					"height": h - divHight + "px",
+					"width": ($("#content").width() - $("#CenterPanel").width() - $("#LeftPanel").width()
+						- $("#div_left_vertical").width() - $("#div_right_vertical").width() -1) + "px",
+				});
+
+				window.$('#div_left').next().height(h - divHight - window.$('#div_left').prev().height());
+				window.$('#div_center').next().height(h - divHight - window.$('#div_center').prev().height());
+				window.$('#div_right').next().height(h - divHight - window.$('#div_right').prev().height());
+			}
+
+			window.$.resizable = function(resizerID, vOrH){
+				window.$('#' + resizerID).bind("mousedown", function(e){
+					var start = e.pageY;
+					if(vOrH=='v') start = e.pageX;
+					window.$('body').bind("mouseup", function(){
+						window.$('body').unbind("mousemove");
+						window.$('body').unbind("mouseup");
+					});
+					window.$('body').bind("mousemove", function(e){
+						var end = e.pageY;
+						if(vOrH=='v') end = e.pageX;
+						if(vOrH=='h'){
+							window.$('#' + resizerID).prev().height(window.$('#' + resizerID).prev().height()+ (end-start));
+							window.$('#' + resizerID).next().height(window.$('#' + resizerID).next().height()- (end-start));
+						}
+						else{
+							window.$('#' + resizerID).prev().width(window.$('#' + resizerID).prev().width()+ (end-start));
+							window.$('#' + resizerID).next().width(window.$('#' + resizerID).next().width()- (end-start));
+						}
+						start = end;
+					});
+				});
+			}
+			window.$.resizable('div_left_vertical', "v");
+			window.$.resizable('div_right_vertical', "v");
+			window.$.resizable('div_right', "h");
+			window.$.resizable('div_center', "h");
+			window.$.resizable('div_left', "h");
+
+			/* load top left panel by jquery.load from other html file.
+				 The difference between iframe and jquery.load is the scope of javascript.
+				 When iframe is used, javascript in the child html file has different scope against the parent html.
+				 If a function in the child html calls a function in the parent html, window.parent can be used.
+				 When jquery.load is used, javascript in the child html file has same scope against the parent html.
+				 Therefore, conflict of names of functions will occurred.
+			*/
+			/*
+			$("#div_top_left").load("Frame_top_left.html");
+			/**/
+//			setModule({"name":"main","window":window});
+			problems.load();
+			//console.log("index.html loaded");
+		});
+
+		function bubbleIframeMouse(iframe){
+			// Save any previous onmousemove handler
+			iframe.contentWindow.$(iframe.contentWindow.document).bind("mousemove mouseup",function(e){
+				// Create a new event for the this window
+				var evt = document.createEvent("MouseEvents");
+
+				// We'll need this to offset the mouse move appropriately
+				var boundingClientRect = iframe.getBoundingClientRect();
+
+				// Initialize the event, copying exiting event values
+				// for the most part
+				evt.initMouseEvent( 
+					e.type, 
+					true, // bubbles
+					false, // not cancelable 
+					window,
+					e.detail,
+					e.screenX,
+					e.screenY, 
+					e.clientX + boundingClientRect.left, 
+					e.clientY + boundingClientRect.top, 
+					e.ctrlKey, 
+					e.altKey,
+					e.shiftKey, 
+					e.metaKey,
+					e.button, 
+					null // no related element
+				);
+
+				// Dispatch the mousemove event on the iframe element
+				iframe.dispatchEvent(evt);
+			});
+		}
+
+		var commands = new Commands({
+			clearInstruct:function(){
+				Object.keys(main.modules).forEach(function(elem){
+					var w = elem==="main"?window:$("#"+elem)[0].contentWindow;
+					w.$("body").clearInstruct();
+				});
+			},
+			updateStatus:function(params){
+				Object.keys(main.loginInfo).forEach(function(elem){
+					params[elem] = main.loginInfo[elem];
+				});
+//console.log("updateStatus",params);
+				main.socket.emit("status",params);
+			},
+			updateProblems:function(params){
+				var up = $.extend({userid:$.cookie("loginId"),username:$.cookie("loginName")},params);
+//console.log("updateProblems",up);
+				main.socket.emit("updateProblems",up);
+			},
+			getLoginId:function(){
+				return $.cookie("loginId")||"";
+			},
+			getLoginName:function(){
+				return $.cookie("loginName")||"";
+			},
+			setLoginId:function(params){
+//console.log("setLoginId ("+params.userid+") ("+params.username+")");
+//console.log(params);
+				Object.keys(params).forEach(function(elem){
+					main.loginInfo[elem] = params[elem];
+				});
+				$.cookie("loginId",params.userid,{expires:main.cookieExpiredDate});
+				$.cookie("loginName",params.username,{expires:main.cookieExpiredDate});
+				$("#toolboxLoginName").text(params.username+" ("+params.userid+")");
+			},
+			writeLog:function(params){
+				var logdata = {};
+				Object.keys(main.loginInfo).forEach(function(elem){
+					logdata[elem] = main.loginInfo[elem];
+				});
+				logdata.message = params.message;
+				Object.keys(main.modules).forEach(function(elem){
+					logdata[main.modules[elem].name+"_text"] = exec({module:main.modules[elem].name,command:"text"});
+				});
+				["count_click_run","count_click_step","count_click_stop"].forEach(function(elem){
+					logdata[elem] = exec({module:"code",command:elem});
+				});
+//console.log(logdata);
+				main.socket.emit("log",logdata);
+			},
+			openReq:function(params){
+				main.openReq = true;
+				$("#openReqPanel").append("<span id='openReqPanelContent' style='color:yellow'>[[ 公開中 ]]</span>");
+			},
+			closeReq:function(params){
+				main.openReq = false;
+				$("#openReqPanelContent").remove();
+			},
+			setEvent:function(params){
+//console.log("setEvent",params);
+				main.events.add(params);
+			},
+			clearEvent:function(name){
+//console.log("clearEvent",name);
+				main.events.clear(name);
+			},
+			clearEventByClass:function(className){
+//console.log("clear class",className);
+				main.events.clearByClass(className);
+			},
+			loadScript:function(params){
+				//problems.clear();
+
+				var lod = function(){
+					plib.setScriptName(params.name);
+					$.getScript(params.name)
+					.done(function(script,textStatus){
+						//plib.unsetScriptName();
+
+						problemsPanel.init();
+						Object.keys(main.modules).forEach(function(elem){
+							exec({module:elem,command:"start"});
+						});
+						// start to solve problems.
+						problems.next();
+					});
+				};
+				$.getScript(params.hintJs)
+				.done(function(script,textStatus){
+					lod();
+				})
+				.fail(function(jqxhr,setting,exception){
+					lod();
+				});
+			},
+		});
+
+		function setModule(cm){
+//console.log("setModule "+cm.name);
+			var iframes = document.getElementsByTagName("iframe");
+			for(var frm in iframes){
+				if(iframes[frm].contentWindow===cm.window){
+					bubbleIframeMouse(iframes[frm]);
+					break;
+				}
+			}
+			main.modules[cm.name] = cm;
+console.log("setModule ",cm);
+
+			if(false===["main","input","code","output","watch","hint",/*,"scripts"*/].some(function(elem){
+				return main.modules[elem]===undefined;
+			})){
+				exec({module:"main",command:"setLoginId",params:{
+					userid:$.cookie("loginId")||"",
+					username:$.cookie("loginName")||"",
+				}});
+				var st = function(){
+					problemsPanel.init();
+
+					Object.keys(main.modules).forEach(function(elem){
+						exec({module:elem,command:"start"});
+					});
+					// start to solve problems.
+console.log("start problem");
+					problems.next();
+				};
+				if(URLParams.day===undefined){
+					st();
+				}else{
+					problems.clear();
+					$.getScript("problems/d"+URLParams.day+"/"+URLParams.day+"_hints.js");
+					var lod = function(i){
+//console.log("loading "+i);
+						var scriptName = URLParams.day+"_"+("0"+i).slice(-2)+".js";
+						plib.setScriptName(scriptName);
+						$.getScript("problems/d"+URLParams.day+"/"+scriptName)
+						.done(function(script,textStatus){
+							plib.unsetScriptName();
+							lod(++i);
+						})
+						.fail(function(jqxhr,setting,exception){
+							plib.unsetScriptName();
+							problems.setAllFinished();
+							$("#dayPanel").html(URLParams.day);
+							$("#dayPanel").css("padding","0px 8px");
+							st();
+						});
+					};
+					lod(1);
+				}
+			}
+		}
+		function exec(receiver){
+//console.log("exec",receiver);
+			return main.modules[receiver.module]===undefined?false:main.modules[receiver.module].window.commands.exec(receiver.command,receiver.params);
+		}
+
+		var main = new function(){
+			var self = this;
+			self.cookieExpiredDate = new Date();
+			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
+
+
+			self.loginInfo = {};
+			self.modules = {};
+			self.openReq = false;
+			self.events = new Events();
+
+			self.checkZen = function(){
+				["input","code"].forEach(function(elem){
+					exec({module:elem,command:"zen2han"});
+				});
+			}
+
+			self.closeToolbox = function(){
+				$("#toolbox").animate({height:"0px"},{complete:function(){$("#toolbox").remove();}});
+			}
+			self.openToolbox = function(){
+				$("#TopPanel").on("click",function(){
+					self.closeToolbox();
+				});
+				if($("#toolbox")[0] === undefined){
+					var p = $("#toolboxButton").offset();
+					var t = p.top+$("#toolboxButton").height()+6;
+					var l = $("body").width()-p.left-$("#toolboxButton").width();
+					$("body").append("<div id=\"toolbox\" "+
+						"style=\"width:200px;height:0px;border:solid 1px;position:absolute;"+
+						"top:"+t+"px;right:"+l+"px;background:lightgrey;padding:6px;\">"+
+						"</div>");
+//					$("#toolbox").append("<div style=\"margin:4px;\"><button onClick=\"javascript:main.checkZen();\">全角=>半角変換</button></div>");
+					Object.keys(main.modules).forEach(function(elem){
+						var html = exec({module:elem,command:"getToolboxItem"});
+						if(html!==false){
+							var h = Array.isArray(html)?html:[html];
+							h.forEach(function(elem){
+								$("#toolbox").append("<div style=\"margin:4px;\">"+elem+"</div>");
+							});
+						}
+					});
+					$("#toolbox").animate({height:"100px"});
+				}
+			}
+			self.logoff = function(){
+				if(confirm("全ての回答を削除してログインし直します。よろしいですか？")){
+					$("body").clearInstruct();
+					$.removeCookie("loginId");
+					["input","code","output"].forEach(function(elem){
+						window.exec({module:elem,command:"autoSave",params:{pnumber:undefined}});
+					});
+					["input","code","output"].forEach(function(module){
+						window.exec({module:module,command:"clearAllCookies"});
+					});
+					problems.removeAllAddedScripts();
+					problems.restartAll();
+				}
+			}
+			self.onReq = function(req){
+console.log("openReq "+main.openReq,req);
+				if(main.openReq === false){
+					return;
+				}
+				exec({module:"code",command:"setEvent",params:{
+					name:"afterEnd",
+					loop:false,
+					func:function(){
+						var out = window.exec({module:"output",command:"outputs"});
+console.log("out",out);
+						self.socket.emit("res",{status:true,output:out});
+						
+						if(req.reqType!==undefined && req.reqType==="check"){
+							if(out===req.output){
+console.log("correct!");
+								problems.next();
+							}else{
+								$("body").instruct({
+									string:"不正解です。すべての入力データをチェックするところからやり直しになります。",
+									align:'center',
+									arrow:false,
+									offsetX:$("body").width()/2,
+									offsetY:$("body").height()/2,
+									targetEventToClose:null,
+									closeButton:true,
+								});
+								plib.clearAllMessages();
+								problems.prev();
+							}
+						}
+					},
+				}});
+				exec({module:"code",command:"run",params:req});
+			}
+
+			self.socket = io("/jl");
+			//self.socket = io("https://pecode.com",{path:"/jl"})
+			self.socket.on("connect",function(){
+				console.log("connected wsock");
+			});
+			self.socket.on("req",self.onReq);
+			self.socket.on("snowfall",function(params){
+				$(document).snowfall(params);
+			});
+		}
+	</script>
+
+	<script>
+		function blocklyLoaded(blockly){
+			// Called once Blockly is fully loaded.
+			window.Blockly = blockly;
+			console.log("blockly loaded");
+		}
+	</script>
+
+</head>
+<body>
+	<div id="TopPanel">
+		<span id="topPanelContents" class="panelTableContents">
+			<span id="TopPanelContents">インタラクティブ ・ プログラミング学習支援ツール</span>
+			<span id="dayPanel" style="margin:0 8px;padding:0px 0px;background:#ffff00;color:#300066;"></span>
+			<span id="problemsPanel"></span>
+			<span id="openReqPanel"></span>
+			<span id="toolboxButtonPanel">
+				<a href="javascript:main.logoff()" id="toolboxLoginName" style="display:inline-block">noname</a>
+				<a href="javascript:main.openToolbox()" id="toolboxButton" style="display:inline-block">ツール</a>
+			</span>
+		</span>
+	</div>
+	<div id="content">
+		<fieldset id="LeftPanel">
+			<div id="panel_top_left" class="window top">
+<!-- This is used in 50 problems
+				<iframe src="scripts.html" id="scripts" style="float:left;width:100%;height:100%;border:0;"></iframe>
+-->
+
+<!-- This is used in restudy previous problems
+				<iframe src="restudy.html" id="scripts" style="float:left;width:100%;height:100%;border:0;"></iframe>
+-->
+
+			</div>
+
+			<div id="div_left" class="handler_horizontal"></div>
+
+			<div id="panel_bottom_left" class="window bottom">
+				<iframe src="input.html" id="input" style="float:left;width:100%;height:100%;border:0;"></iframe>
+			</div>
+		</fieldset>
+
+		<div id="div_left_vertical" class="handler_vertical"></div>
+
+		<fieldset id="CenterPanel">
+			<div id="panel_top_center" class="window top_center">
+				<iframe src="watch.html" id="watch" style="float:left;width:100%;height:100%;border:0;"></iframe>
+			</div>
+
+			<div id="div_center" class="handler_horizontal"></div>
+
+			<div id="panel_bottom_center" class="window bottom_center">
+				<iframe src="code.html" id="code" style="float:left;width:100%;height:100%;border:0;"></iframe>
+<!--
+				<iframe src="code_blockly.html" id="code" style="float:left;width:100%;height:100%;border:0;"></iframe>
+-->
+			</div>
+		</fieldset>
+
+		<div id="div_right_vertical" class="handler_vertical"></div>
+
+		<fieldset id="RightPanel">
+			<div id="panel_top_right" class="window top">
+				<iframe src="hint.html" id="hint" style="float:left;width:100%;height:100%;border:0;"></iframe>
+			</div>
+
+			<div id="div_right" class="handler_horizontal"></div>
+
+			<div id="panel_bottom_right" class="window bottom">
+				<iframe src="output.html" id="output" style="float:left;width:100%;height:100%;border:0;"></iframe>
+			</div>
+		</fieldset>
+	</div>
+	<div id="BottomPanel"><span id="BottomPanelContents" class="panelTableContents">released 2016.05.26</span></div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+	<script>
+		$(function(){
+			window.parent.setModule({"name":"watch","window":window,"commands":commands});
+//			console.log("watch.html loaded");
+		});
+		var values = [];
+		var commands = new Commands({
+			update:function(scope){
+				values.forEach(function(elem){
+					function findProperty(scope,name){
+						if(scope.properties[name]===undefined){
+							if(scope.parentScope!==null){
+								return findProperty(score.parentScope,name);
+							}
+							return "undefined";
+						}else{
+//							return scope.properties[name].data;
+							return scope.properties[name].toString();
+						}
+					}
+					$("#value_"+elem).text(findProperty(scope,elem));
+				});
+				return true;
+			},
+			text:function(){
+				var txt = "";
+				values.forEach(function(elem){
+					txt += (txt.length==0?"":", ")+elem+"="+$("#value_"+elem).text();
+				});
+//console.log("values.length",values.length);
+				return txt;
+			},
+			enable:function(){
+				$("body").css("pointer-events","auto");
+				$("body *").css("pointer-events","auto");
+			},
+			disable:function(){
+				$("body").css("pointer-events","none");
+				$("body *").css("pointer-events","none");
+			},
+			addValue:function(params){
+				$("#values").append("<td class=\"valueRecord\">"+params.name+" = <span id=\"value_"+params.name+"\" class=\"valuePanel\"></span></td>");
+				values.push(params.name);
+			},
+			clear:function(){
+				$(".valueRecord").remove();
+				values = [];
+			},
+		});
+	</script>
+	<style>
+		body {
+			margin: 10px;
+		}
+		.valuePanel {
+			margin-right: 10px;
+		}
+	</style>
+</head>
+<body>
+	<table id="panel" border="0">
+		<tr id="values">
+<!--
+			<td>a = <span id="a"></span>, </td>
+			<td>b = <span id="b"></span>, </td>
+			<td>c = <span id="c"></span></td>
+-->
+		</tr>
+	</table>
+</body>
+</html>

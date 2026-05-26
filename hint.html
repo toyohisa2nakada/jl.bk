@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+	<script>
+		$(function(){
+			window.parent.setModule({"name":"hint","window":window,"commands":commands});
+//			console.log("hint.html loaded");
+		});
+		var hints = {};
+		var commands = new Commands({
+			add:function(params){
+				if(0===Object.keys(hints).length){
+					$("#label").html("追加情報");
+				}
+				var id = params.id || UUID.uuid();
+				var func = params.onclick || function(){console.log("no function");}
+				$("#"+id).remove();
+				$("#hints").append(
+					"<button id=\""+id+"\" class=\"hintRecord\" onclick=\"hints['"+id+"']['onclick']()\">"+params.name+"</button>");
+				hints[id] = {name:params.name,onclick:function(){
+					func();
+					$("#"+id).css({'background-color':'#00ff00'});
+				}};
+				return id;
+			},
+			enable:function(){
+				$("body").css("pointer-events","auto");
+				$("body *").css("pointer-events","auto");
+			},
+			disable:function(){
+				$("body").css("pointer-events","none");
+				$("body *").css("pointer-events","none");
+			},
+			clear:function(){
+				$("#label").html("");
+				$(".hintRecord").remove();
+				hints = {};
+			},
+		});
+	</script>
+	<style>
+		body {
+			margin: 10px;
+		}
+		.hintPanel {
+			margin-right: 10px;
+		}
+		button {
+			margin: 2px;
+			font-size: small;
+		}
+	</style>
+</head>
+<body>
+	<div id="label"></div>
+	<div id="hints"></div>
+</body>
+</html>

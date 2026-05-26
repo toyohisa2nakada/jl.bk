@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "to_script_tag [directory name]"
+	exit 1
+fi
+
+echo "directory [$1]"
+
+print_script_tag(){
+	echo "<script src=\"problems/mgr_course_2017/$1\"></script>"
+}
+
+if [ -f "$1/hints.js" ]; then
+	print_script_tag "$1/hints.js"
+fi
+
+files="$1/*"
+for f in $files; do
+	if [ ! "`echo $f |grep 'hint'`" ]; then
+		print_script_tag $f
+	fi
+done
+

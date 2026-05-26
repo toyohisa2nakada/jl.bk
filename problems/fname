@@ -1,0 +1,5 @@
+#!/bin/bash
+for((i=9; i>=1; i--)); do
+	 echo "*$i.js"
+	mv 20170713_0$i.js 20170720_0$i.js
+done

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!--
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+-->
+	<script src="jquery.cookie.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script>
+		$(function(){
+			window.parent.setModule({"name":"output","window":window,"commands":commands});
+		});
+		var out = new function(){
+			var self = this;
+
+			self.events = new Events();
+			self.clearOutputs = function(){
+				self.outputs = "";
+			}
+			self.addOutput = function(str){
+				self.outputs = self.outputs.length===0?str:(self.outputs+"<br>"+str);
+				return self.getOutputs();
+			}
+			self.getOutputs = function(){
+				return self.outputs;
+			}
+			self.getInput = function(){
+				return $("#inputPanel").val();
+			}
+
+			self.clearMessage = function(){
+				self.setMessage("");
+			}
+			self.setMessage = function(text){
+				$("#message").html(text);
+			}
+			self.getMessage = function(){
+				return $("#message").html();
+			}
+
+			self.clearOutputs();
+		}
+		out.disk = new function(){
+			var self = this;
+			$.cookie.json = true;
+			self.headerTitle = "output.";
+			self.cookieExpiredDate = new Date();
+			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
+			self.pnumber = undefined;
+			self.header = undefined;
+
+			self.autoSave = function(pnumber){
+				self.pnumber = pnumber;
+				self.header = self.headerTitle+self.pnumber;
+			}
+			self.removeAll = function(){
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+self.headerTitle)).test(name)){
+						$.removeCookie(name);
+					}
+				});
+			}
+			self.load = function(pnumber){
+				self.pnumber = pnumber || self.pnumber;
+//console.log("output load "+self.pnumber);
+				if(self.pnumber === undefined){
+					return false;
+				}
+				var output = $.cookie(self.header+".output");
+				if(output === undefined){
+					return false;
+				}
+				var input = $.cookie(self.header+".input");
+//console.log("load "+input);
+				if(input === undefined){
+					return false;
+				}
+				window.parent.exec({module:"output",command:"setInput",params:{value:input}});
+				output.split(/<br>|<br \/>/gi).forEach(function(out){
+					window.parent.exec({module:"output",command:"print",params:out});
+				});
+				return true;
+			},
+			self.save = function(params){
+/* 50_problemsのときにはcookieのオーバーフロー対策として以下をコメントアウトする。 */
+				if(self.pnumber === undefined){
+					return;
+				}
+				$.cookie(self.header+".output",out.getOutputs(),{expires:self.cookieExpiredDate});
+				$.cookie(self.header+".input",out.getInput(),{expires:self.cookieExpiredDate});
+/**/
+			}
+		}
+		var commands = new Commands({
+			print:function(str){
+				var e = {preventDefault:false,text:str};
+				out.events.call("beforePrint",e);
+				if(e.preventDefault===true){
+					return;
+				}
+				$("#panel").append("<div class='line'>"+str+"</div>");
+				out.addOutput(str);
+				out.events.call("afterPrint");
+				out.events.call(str);
+//console.log("print save");
+				out.disk.save();
+			},
+			clear:function(){
+				$(".line").remove();
+				out.clearOutputs();
+				out.clearMessage();
+			},
+			html:function(){
+				return $("#panel").html();
+			},
+			text:function(){
+				return $("#panel").text();
+			},
+			val:function(){
+				return $("#panel").val();
+			},
+			outputs:function(){
+				return out.getOutputs();
+			},
+			enable:function(){
+				$("body").css("pointer-events","auto");
+				$("body *").css("pointer-events","auto");
+			},
+			disable:function(){
+				$("body").css("pointer-events","none");
+				$("body *").css("pointer-events","none");
+			},
+			setMessage:function(params){
+				out.setMessage(params.text);
+			},
+			getMessage:function(){
+				return out.getMessage();
+			},
+			clearMessage:function(){
+				return out.clearMessage();
+			},
+			setEvent:function(params){
+				out.events.add(params);
+			},
+			clearEvent:function(name){
+				out.events.clear(name);
+			},
+			clearEventByClass:function(className){
+				out.events.clearByClass(className);
+			},
+			setInitial:function(params){
+				if(false === out.disk.load(params.pnumber)){
+					if(params.input !== undefined && params.input === true){
+						window.parent.exec({module:"output",command:"setInput",params:params});
+					}
+				}
+			},
+			setInput:function(params){
+				if($("#inputPanel")[0]===undefined){
+					$("#input").append("<textarea id='inputPanel' class='values' rows='14' cols='18'></textarea>");
+
+					$(".values").off("keyup");
+					$(".values").on("keyup",function(){
+//console.log("keyup save");
+						out.disk.save();
+					});
+				}
+				if(params!==undefined && params.value!==undefined){
+					$("#inputPanel").val(params.value);
+				}
+			},
+			clearInput:function(params){
+				$("#inputPanel").remove();
+			},
+			getInput:function(params){
+				return $("#inputPanel").val();
+			},
+			clearAllCookies:function(){
+				out.disk.removeAll();
+			},
+			autoSave:function(params){
+				out.disk.autoSave(params.pnumber);
+			},
+		});
+	</script>
+	<style>
+		body {
+			margin: 10px;
+		}
+		#title {
+			font-size:x-large;
+		}
+		#panel {
+			margin:10px;
+		}
+		textarea {
+			resize: none;
+		}
+	</style>
+</head>
+<body>
+	<div id="title">出力</div>
+	<div id="message"></div>
+	<div id="input"></div>
+	<div id="panel"></div>
+</body>
+</html>

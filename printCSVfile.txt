@@ -1,0 +1,8 @@
+:field names
+uuid,userid,username,created_date,message,input_text,code_text,output_text,watch_text,count_click_run,count_click_step,count_click_stop
+
+:select statemenet for all fields
+SELECT * FROM logs INTO OUTFILE '/tmp/output.csv' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"';
+
+:select statement for selected fields
+SELECT userid,username,created_date,message,count_click_run,count_click_step,count_click_stop FROM logs INTO OUTFILE '/tmp/output.csv' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"';

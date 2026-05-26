@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+	<script>
+		$(function(){
+			window.parent.setModule({"name":"scripts","window":window,"commands":commands});
+		});
+		var scripts = new function(){
+			var self = this;
+			self.currentScriptName = undefined;
+			self.setScriptName = function(name){
+				self.currentScriptName = name;
+			}
+			self.unsetScriptName = function(){
+				self.currentScriptName = undefined;
+			}
+			self.getScriptName = function(){
+				return self.currentScriptName;
+			}
+			self.update = function(scriptName,type){
+				window.parent.exec({module:"main",command:"updateProblems",params:{
+					type:type,
+					scriptName:scriptName,
+				}});
+			}
+			self.toFullScriptName = function(name){
+				return "problems/50/"+name;
+			}
+			self.toSimpleScriptName = function(name){
+				return name.replace(/^problems\/50\//,"");
+			}
+		}
+		var commands = new Commands({
+			start:function(){
+				$("#load").click(function(){
+					var scName = scripts.toFullScriptName($("#name").val());
+console.log("simple",scripts.toSimpleScriptName(scName));
+					if(scripts.getScriptName()===scName){
+						return;
+					}
+					if(window.parent.problems.isFinished()===false){
+						alert("先に、今の問題を解くか、キャンセルしてから新しい問題を読み込んでください。");
+						return;
+					}
+					if(-1 !== window.parent.problems.getAddedScriptIndex(scName)){
+						alert("既に解答済みの問題です。");
+						return;
+					}
+					scripts.setScriptName(scName);
+					window.parent.problems.addScript(scripts.getScriptName());
+					scripts.update(scripts.toSimpleScriptName(scripts.getScriptName()),"load");
+				});
+				$("#cancel").click(function(){
+					if(undefined === window.parent.problems.getAddedScriptName()){
+						alert("現在取り組んでいる問題はありません。");
+						return;
+					}
+					if(window.parent.problems.isFinishedProblem()===true){
+						alert("既に解いた問題は、キャンセルできません。");
+						return;
+					}
+					if(confirm("今取り組んでいる問題をキャンセルします。よろしいですか？")){
+console.log(scripts.getScriptName());
+						scripts.update(scripts.toSimpleScriptName(scripts.getScriptName()),"cancel");
+						scripts.unsetScriptName();
+						window.parent.problems.removeAddedScript();
+
+/**/
+						window.parent.exec({module:"main",command:"clearInstruct"});
+						["input","code","output"].forEach(function(elem){
+							window.parent.exec({module:elem,command:"autoSave",params:{pnumber:undefined}});
+						});
+						["main","input","code","output","watch","hint"].forEach(function(elem){
+							window.parent.exec({module:elem,command:"clear"});
+							window.parent.exec({module:elem,command:"clearEvent"});
+							window.parent.exec({module:elem,command:"clearInput"});
+						});
+						window.parent.exec({module:"main",command:"closeReq"});
+						window.parent.exec({module:"code",command:"setText",params:""});
+						window.parent.exec({module:"scripts",command:"setScriptName",params:""});
+/**/
+					}
+				});
+			},
+			setScriptName:function(scriptName){
+				$("#scriptName").html(scriptName);
+				scripts.setScriptName(scriptName);
+
+				if(scriptName.length!==0){
+					window.parent.exec({module:"main",command:"setEvent",params:{
+						name:"allProblemsFinished",
+						loop:false,
+						func:function(params,e){
+console.log("finished",scripts.getScriptName());
+							scripts.update(scripts.toSimpleScriptName(scripts.getScriptName()),"cleared");
+						},
+					}});
+				}
+			},
+			clearAllCookies:function(){
+			},
+		});
+	</script>
+	<style>
+		body {
+			margin: 10px;
+		}
+		.valuePanel {
+			margin-right: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div id="loadPanel">
+		<input id="name" type="text" maxlength="8" size="10"></input>
+		<button id="load">読み込み</button>
+	</div>
+	<div id="cancelPanel" style="margin-top:10px;">
+		<span id="scriptName" style="color:green"></span>
+		<button id="cancel">問題のキャンセル</button>
+	</div>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JavaScript Controller</title>
+
+	<link rel="stylesheet" href="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="//code.jquery.com/jquery-1.12.2.min.js" integrity="sha256-lZFHibXzMHo3GGeehn1hudTAP3Sc0uKXBXAzHX1sjtk=" crossorigin="anonymous"></script>
+	<script src="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+
+	<script>
+		$(function(){
+			self.socket = undefined;
+			self.req = function(){
+				$("#message").text("");
+				$("#output").text("");
+				var checkok = true;
+				var checkIds = ["userid"];
+				problems[self.current].inputs.forEach(function(elem){
+					checkIds.push(elem.name);
+				});
+				var req = {};
+				for(var i in checkIds){
+					var elem = checkIds[i];
+					var check = undefined;
+					if(problems[self.current].inputCheck!==undefined){
+						check = problems[self.current].inputCheck[elem];
+					}
+					$("#"+elem).val($.trim($("#"+elem).val()));
+					var v = $("#"+elem).val();
+					if(v.length===0){
+						$("#message").text($("[for="+elem+"]").text()+"を入力してください。");
+						$("#"+elem).focus();
+						checkok = false;
+						break;
+					}else if(check!==undefined && false===check(v)){
+						$("#message").text($("[for="+elem+"]").text()+"の形式が違います。");
+						$("#"+elem).focus();
+						checkok = false;
+						break;
+					}else{
+						var v = req[elem] = $("#"+elem).attr("type")==="number"?Number(v):v;
+					}
+				}
+				if(checkok === true){
+					req.input = "";
+					req.reqType = problems[self.current].reqType;
+					checkIds.forEach(function(elem){
+						if(elem!=="userid"){
+							req.input += elem+"="+escape(req[elem])+";";
+						}
+					});
+					if(req.reqType==="check"){
+						req.output = problems[self.current].answer(req);
+						$("#message").text("予想出力 "+req.output.replace(/(<br>|<br \/>)/gi," "));
+					}
+					req.scriptName = problems[self.current].scriptName;
+					self.socket.emit("req",req);
+console.log("send req",req);
+				}
+			}
+			self.current = -1;
+			self.init = function(pnumber){
+				for(var i=0;i<problems.length;i++){
+					if(problems[i].pnumber === pnumber){
+						self.current = i;
+						break;
+					}
+				}
+				if(self.current === -1){
+					return;
+				}
+				$("#input *").remove();
+				if(problems[self.current].inputs===undefined){
+					return;
+				}
+				problems[self.current].inputs.forEach(function(elem){
+					var label = elem.name+
+						(elem.example===undefined?"":" (例 "+elem.example+")");
+					$("#input").append(
+						"<div class='ui-field-contain'>"+
+							"<label for='"+elem.name+"'>"+label+"</label>"+
+							"<input id='"+elem.name+"' type='"+elem.type+"' />"+
+						"</div>");
+					$("#"+elem.name).textinput();
+				})
+			}
+
+			self.socket = io("/jl");
+			self.socket.on("res",function(res){
+				console.log("received "+res);
+				if(res.message !== undefined){
+					$("#message").text(res.message);
+				}
+				if(res.output !== undefined){
+					$("#output").text(res.output);
+				}
+			});
+
+			$("#pnumber").bind("change",function(event,ui){
+				self.init(Number($("#pnumber").val()));
+			});
+			problems.forEach(function(elem){
+				$("#pnumber").append("<option value='"+elem.pnumber+"'>"+elem.pnumber+"</option>");
+			});
+			if(problems.length>0){
+				self.init(problems[0].pnumber);
+				$("#pnumber").val(problems[0].pnumber).selectmenu("refresh");
+			}
+		});
+		var self = {};
+		var problems = [];
+	</script>
+	<script src="problems/smartphone/20160630_1c.js"></script>
+</head>
+<body>
+	<div data-role="page">
+		<div data-role="header">
+<!--
+			javascript controller
+-->
+		</div>
+		<div data-role="content">
+			<div class="ui-bar ui-bar-a">ログイン、問題番号</div>
+			<div class="ui-body ui-body-a">
+				<div class="ui-field-contain">
+					<label for="userid">ログインID (例: s15000aa)</label>
+					<input id="userid" type="text" data-mini="true" />
+				</div>
+				<div class="ui-field-contain">
+					<label for="pnumber">問題番号</label>
+					<select id="pnumber" data-mini="true"></select>
+				</div>
+			</div>
+
+			<div class="ui-bar ui-bar-a">入力データ</div>
+			<div class="ui-body ui-body-a">
+				<div id="input"></div>
+			</div>
+
+			<div class="ui-bar ui-bar-a">出力データ</div>
+			<div class="ui-body ui-body-a">
+				<div id="output"></div>
+			</div>
+
+			<div class="ui-field-contain">
+				<a href="javascript:self.req();" class="ui-btn">実　　行</a>
+				<span id="message"></span>
+			</div>
+		</div>
+		<div data-role="footer">
+		</div>
+	</div>
+</body>
+</html>

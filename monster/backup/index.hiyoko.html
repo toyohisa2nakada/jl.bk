@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<!-- add next 3 lines -->
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+	<script src="/jl/utils.js"></script>
+
+    <title>Unity WebGL Player | TestWebGL</title>
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <link rel="shortcut icon" href="TemplateData/favicon.ico" />
+    <script src="TemplateData/UnityProgress.js"></script>
+  </head>
+  <body class="template">
+    <p class="header"><span>Unity WebGL Player | </span>TestWebGL</p>
+    <div class="template-wrap clear">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="600px" width="960px"></canvas>
+      <br>
+      <div class="logo"></div>
+      <div class="fullscreen"><img src="TemplateData/fullscreen.png" width="38" height="38" alt="Fullscreen" title="Fullscreen" onclick="SetFullscreen(1);" /></div>
+      <div class="title">TestWebGL</div>
+    </div>
+    <p class="footer">&laquo; created with <a href="http://unity3d.com/" title="Go to unity3d.com">Unity</a> &raquo;</p>
+    <script type='text/javascript'>
+  var Module = {
+    TOTAL_MEMORY: 268435456,
+    errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
+    compatibilitycheck: null,
+    dataUrl: "Release/WebGL.data",
+    codeUrl: "Release/WebGL.js",
+    memUrl: "Release/WebGL.mem",
+    
+  };
+</script>
+<script src="Release/UnityLoader.js"></script>
+
+<!-- add next -->
+<button>test</button>
+<script>
+	var send = function(type,name){
+		SendMessage("Exports",type,name);
+	};
+	var s = document.querySelector("button");
+	s.addEventListener("click", function() {
+		send("add","fromHTMLButton,1");
+	});
+	var self = {};
+	$(function(){
+		self.clientId = UUID.uuid();
+
+		self.socket = io("/hiyoko");
+		self.socket.on("msg req",function(req){
+			console.log("msg req",req);
+			var types = {
+				"getType":function(){self.socket.emit("msg type",{type:"place",clientId:self.clientId});},
+				"add":function(){send("add",req.id.substr(0,4)+","+(req.inHoleIndex+1));},
+				"remove":function(){send("remove",req.id.substr(0,4));},
+				"jump":function(){send("jump",req.id.substr(0,4));},
+				"remove_ground":function(){},
+				"jump_all":function(){},
+			};
+			types[req.cmd]();
+		});
+	});
+</script>
+<!-- add upper -->
+
+  </body>
+</html>

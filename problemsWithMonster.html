@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script src="lib/socket.io-client/socket.io.js"></script>
+	<script src="lib/snowfall/snowfall.jquery.js"></script>
+	<script>
+		var problems = new function(){
+			var self = this;
+			self.scripts = {};
+			self.cookieTitle = "problems:";
+
+			self.numberOfCleared = 17;
+			self.numberOfCols = 21;
+
+			$.cookie.json = true;
+			self.cookieExpiredDate = new Date();
+			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
+
+			self.clear = function(){
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+self.cookieTitle)).test(name)){
+						$.removeCookie(name);
+					}
+				});
+			}
+			self.load = function(){
+				$.each($.cookie(),function(name,value){
+					var ret = name.match(new RegExp(self.cookieTitle+"([^:]*):(.*)"));
+					if(ret !== null){
+						var name = ret[1];
+						var key  = ret[2];
+						if(self.scripts[name]!==undefined){
+							self.scripts[name][key] = value;
+						}
+					}
+				});
+			}
+			self.save = function(){
+				for(var name in self.scripts){
+					for(var key in self.scripts[name]){
+						$.cookie(self.cookieTitle+name+":"+key,self.scripts[name][key],{expires:self.cookieExpiredDate});
+					}
+				}
+			}
+			self.printCookies = function(selector){
+				for(var name in self.scripts){
+					for(var key in self.scripts[name]){
+						$(selector).append(
+							"<br />"+name+":"+key+","+self.scripts[name][key]);
+					}
+				}
+			}
+
+			self.toID = function(name){
+				return name.replace(/\./gi,"_");
+			}
+			self.reset = function(){
+				for(var i=1;i<=63;i++){
+					self.scripts[("0"+i).substr(-2)+".js"] = {cleared:[],tring:[]};
+				}
+			}
+			self.init = function(){
+				var records = [];
+				for(var name in self.scripts){
+					var id = self.toID(name);
+					var html = "<td id='"+id+"' class='scripts'>";
+					html += "<div>";
+					html += " <div id='"+id+"_name' class='scriptsName'>"+name;
+					html += " </div>";
+					html += " <div>";
+					html += "  <span id='"+id+"_cleared' class='scriptsCleared'></span>";
+					html += "  <span id='"+id+"_tring' class='scriptsTring'></span>";
+					html += " </div>";
+					html += "</div>";
+					html += "</td>";
+					if(records.length===0 || records[records.length-1].length===self.numberOfCols){
+						records.push([]);
+					}
+					records[records.length-1].push(html);
+				}
+				for(var i in records){
+					var html = "<tr>";
+					for(var j in records[i]){
+						html += records[i][j];
+					}
+					html += "</tr>";
+					$("#field").append(html);
+				}
+			}
+			self.check = function(){
+				var allFinished = true;
+				for(var name in self.scripts){
+					if(self.scripts[name].cleared.length < self.numberOfCleared){
+						allFinished = false;
+					}else{
+						$("#"+self.toID(name)).css({backgroundColor:"#888888"});
+					}
+				}
+
+				if(allFinished){
+					self.finished();
+				}
+			}
+			self.finished = function(){
+				var params = {
+					image: "lib/snowfall/sakura_hanabira3.png",
+					flakeCount : 100,  //要素の数
+					minSize : 25,      //最大の大きさ
+					maxSize : 45,      //最小の大きさ
+					round : true       //丸みを持たせる
+				};
+				$(document).snowfall(params);
+				self.socket.emit("snowfall",params);
+			}
+			self.update = function(params){
+				var pms = $.extend({animate:true,check:true},params||{});
+				for(var name in self.scripts){
+					var str = "";
+/*
+					for(var i=0;i<self.numberOfCleared;i++){
+						if(str.length!==0){
+							str += ",";
+						}
+						if(i<self.scripts[name]["cleared"].length){
+							str += self.scripts[name]["cleared"][i];
+						}else{
+							str += "________";
+						}
+					}
+*/
+					str += self.scripts[name]["cleared"].length;
+					
+					var id = self.toID(name);
+					var idstr = "#"+id+"_tring";
+					$(idstr).html("("+self.scripts[name]["tring"].length+")");
+
+					idstr = "#"+id+"_cleared";
+					var old = $(idstr).html();
+					if(old !== str){
+						$(idstr).html(str);
+						if(pms.animate===true){
+							self.animate(id,str,self.check);
+						}else{
+//							$(idstr).html(str);
+							if(pms.check===true){
+								self.check();
+							}
+						}
+					}
+				}
+			}
+			self.animate = function(id,str,onComplete){
+				var idstr = "#"+id;
+				var css = [
+					{backgroundColor:"#00ff00"},
+					{backgroundColor:"#cc6666"},
+					{backgroundColor:"#00ff00"},
+					{backgroundColor:"#cc6666"},
+					{backgroundColor:"#00ff00"},
+					{backgroundColor:"#cc6666"},
+				];
+				var cssi = -1;
+				var comp = function(){
+					cssi++;
+					if(cssi==css.length){
+//						$(idstr+"_cleared").html(str);
+						onComplete();
+					}else{
+						$(idstr).animate(css[cssi],{duration:500,complete:comp});
+					}
+				}
+				comp();
+			}
+			self.connect = function(){
+				self.socket = io("/jl");
+				self.socket.on("connect",function(){
+					console.log("connected wsock");
+					self.socket.emit("status",{type:"problems"});
+				});
+				self.socket.on("updateProblems",function(params){
+console.log("update",params);
+					var funcs = {
+						"load":function(params){
+							var a = self.scripts[params.scriptName]["tring"];
+							if(-1===a.indexOf(params.userid)){
+								a.push(params.userid);
+							}
+						},
+						"cancel":function(params){
+							var a = self.scripts[params.scriptName]["tring"];
+							a.splice(a.indexOf(params.userid),1);
+						},
+						"cleared":function(params){
+							funcs["cancel"](params);
+							var a = self.scripts[params.scriptName]["cleared"];
+							if(-1===a.indexOf(params.userid)){
+								a.push(params.userid);
+
+console.log("scriptName",params.scriptName);
+								var damage = Math.max(1,Math.floor(Number(params.scriptName.split(".")[0])/3));
+console.log("num",damage);
+								// attack to monster
+								$("#monster").get(0).contentWindow.send("add",params.userid+","+damage);
+							}
+						},
+					};
+					funcs[params.type](params);
+					self.save();
+					self.update();
+				});
+			}
+		}
+		function finishedCall(){
+			problems.finished();
+		}
+		$(function(){
+			$("#clearCookies").click(function(){
+				problems.clear();
+				problems.reset();
+				problems.update({animate:false});
+			});
+			$("#printCookies").click(function(){
+				problems.printCookies("#controls");
+			});
+			problems.reset();
+			problems.load();
+/*
+for(var name in problems.scripts){
+	for(var key in problems.scripts[name]){
+		console.log(name+":"+key+":"+problems.scripts[name][key]);
+	}
+}
+*/
+
+			problems.init();
+			problems.update({animate:false,check:false});
+			problems.check();
+			problems.connect();
+		});
+	</script>
+	<script>
+		// test button functions
+		$(function(){
+			var s = document.querySelector("button");
+			s.addEventListener("click", function() {
+				console.log("click");
+				$("#monster").get(0).contentWindow.send("add","name1,4");
+			});
+		});
+	</script>
+	<style>
+		body {
+			font-family: Consolas, 'Courier New', Courier, Monaco, monospace;
+			margin: 40px;
+		}
+		#monsterPanel {
+			height: 660px;
+		}
+		.scripts {
+			background-color: #cc6666;
+			height: 3px;
+			border-color: #ff9999 #993333 #993333 #ff9999;
+			border-width: 2px;
+			border-style: solid;
+			padding: 10px;
+		}
+		.scriptsName {
+			font-size: large;
+		}
+		.scriptsCleared {
+			margin: 2px;
+			font-size: x-small;
+		}
+		.scriptsTring {
+			margin: 2px;
+			font-size: x-small;
+		}
+		#controls {
+			margin: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div id="monsterPanel">
+		<button>test from out of iframe</button>
+		<iframe src="monster/index.html" id="monster" style="float:left;width:100%;height:100%;border:0;"></iframe>
+	</div>
+	<div id="content">
+		<table id="field" cellspacing="12px">
+		</table>
+	</div>
+	<div id="controls">
+		<button id="clearCookies">clear cookies</button>
+		<button id="printCookies">print cookies</button>
+	</div>
+</body>
+</html>

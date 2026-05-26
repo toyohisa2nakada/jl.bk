@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!--
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+-->
+	<script src="jquery.cookie.js"></script>
+
+	<link rel="stylesheet" href="lib/codemirror/codemirror.css">
+	<script src="lib/codemirror/codemirror.js"></script>
+
+	<script src="lib/codemirror/mode/javascript/javascript.js"></script>
+	<script src="lib/js_interpreter/acorn.js"></script>
+	<script src="lib/js_interpreter/interpreter.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+
+	<script>
+		// open commands which are used by other modules via window.parent.exec method.
+		var commands = new Commands({
+			getToolboxItem:function(){
+				var items = [];
+				Object.keys(toolbox_items).forEach(function(elem){
+					var id="toolbox_code_"+elem;
+					items.push("<input id=\""+id+"\" type=\"checkbox\" "+(toolbox_items[elem].value?"checked":"")+
+						" onclick=\"javascript:exec({module:'code',command:'onToolboxItem',params:{name:'"+elem+"',value:$('#"+id+"').prop('checked')}});\">"+
+						toolbox_items[elem].name+"</input>");
+				});
+				return items;
+			},
+			onToolboxItem:function(params){
+				toolbox_items[params.name].value = params.value;
+				initArrowMarkers();
+			},
+			setEvent:function(params){
+				events.add(params);
+			},
+			clearEvent:function(name){
+				events.clear(name);
+			},
+			clearEventByClass:function(className){
+				events.clearByClass(className);
+			},
+			clear:function(){
+			},
+			clearAllCookies:function(){
+				disk.removeAll();
+			},
+			removeCookie:function(params){
+				disk.remove(params);
+			},
+			autoSave:function(params){
+				disk.autoSave(params.pnumber);
+			},
+			text:function(){
+				return jsEditor.getDoc().getValue();
+			},
+			enable:function(){
+				$("body").css("pointer-events","auto");
+				$("body *").css("pointer-events","auto");
+			},
+			disable:function(){
+				$("body").css("pointer-events","none");
+				$("body *").css("pointer-events","none");
+			},
+			setText:function(str){
+				jsEditor.getDoc().setValue(str);
+			},
+			setInitialText:function(str){
+				if(false === disk.load(str.pnumber)){
+					jsEditor.getDoc().setValue(str.text);
+					if(str.setEditable !== undefined){
+						window.parent.exec({module:"code",command:"setEditable",params:str.setEditable});
+					}
+					disk.save();
+				}
+			},
+			setEditable:function(blocks){
+				var pt = {line:0,ch:0};
+				for(var i=0;i<blocks.length;i++){
+					var st = blocks[i][0];
+					var et = blocks[i][1];
+					jsEditor.markText(pt,st,$.extend({},markerDefault,{inclusiveLeft:i===0,inclusiveRight:false}));
+					pt = et;
+				}
+				jsEditor.markText(pt,{line:jsEditor.getDoc().lineCount(),ch:0},$.extend({},markerDefault,{inclusiveLeft:false}));
+			},
+			setReadOnly:function(){
+				jsEditor.markText({line:0,ch:0},{line:jsEditor.getDoc().lineCount(),ch:0},$.extend({},markerDefault));
+			},
+			getEditableString:function(){
+				var marks = jsEditor.getDoc().getAllMarks();
+				var str = jsEditor.getDoc().getValue();
+				for(var m in marks){
+					if(marks[m].limit === true){
+						var mk = marks[m].find();
+						str = str.replace(jsEditor.getDoc().getRange(mk.from,mk.to),"");
+					}
+				}
+				return str;
+			},
+			run:function(params){
+				onRun(params);
+			},
+			stop:function(){
+				onStop();
+			},
+			step:function(params){
+				onStep(params);
+			},
+			count_click_run:function(){
+				return counts.click_run;
+			},
+			count_click_step:function(){
+				return counts.click_step;
+			},
+			count_click_stop:function(){
+				return counts.click_stop;
+			},
+			zen2han:function(){
+				if(codeCover === null){
+					jsEditor.getDoc().setValue(zen2han(jsEditor.getDoc().getValue()));
+				}
+			},
+		});
+		var markerDefault = {css:"background:#e0e0e0",readOnly:true,inclusiveLeft:true,inclusiveRight:true,limit:true};
+		// CodeMirror object (https://codemirror.net/)
+		var jsEditor;
+		// JS-Interpreter object (https://github.com/NeilFraser/JS-Interpreter)
+		var myInterpreter = null;
+		// arrow markers
+		var arrowMarkers = {};
+		// cover of code object which is used for preventing code edit during execution.
+		var codeCover = null;
+		// events control object. events are such as beforeStart, afterEnd and so on.
+		var events = new Events();
+		// toolbox items
+		var toolbox_items = {cat:{name:"実行箇所に猫を表示",value:false,img:"cat.png"},arrow:{name:"実行箇所に矢印を表示",value:true,img:"arrow.png"}};
+		//次のコードを実行するステップ実行の1つの塊を作成する。
+		//この1つの塊は、JS-Interpreterの作成する個々の要素だとデバッグをするのに
+		//細かすぎて分かりにくいため、ある程度の単位で1つになるようにプログラムの中で制御している。
+		//そのためにnextメソッドを再帰的に呼び出す。そのためにユーザから見て1つの
+		//実行単位の前後に何かしらの処理を入れようとした場合に再帰のnext内には
+		//そのコードを追加できず、このような処理の塊を作成する必要があった。
+		//この配列は、utils.jsにあるinSequenceメソッドによって実行され、
+		//nextの戻り値のみがこの処理の塊全体の戻り値となるようにしている。
+		var nextSequence = [
+			function(){events.call("beforeStep");},
+			function(){return next();},
+			function(){updateProperties();events.call("afterStep");}
+		];
+		var nextSequenceReturnIndex = 1;
+		// user behavior
+		var counts = {click_run:0,click_step:0,click_stop:0};
+
+		// ms
+		var runInterval = 400;
+
+		var disk = new function(){
+			var self = this;
+			$.cookie.json = true;
+			self.headerTitle = "editing.";
+			self.cookieExpiredDate = new Date();
+			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
+			self.pnumber = undefined;
+			self.header = undefined;
+
+			self.autoSave = function(pnumber){
+				self.pnumber = pnumber;
+				self.header = self.headerTitle+self.pnumber;
+			}
+			self.removeAll = function(){
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+self.headerTitle)).test(name)){
+						$.removeCookie(name);
+					}
+				});
+				$.removeCookie(self.headerTitle+"runInterval");
+			}
+			self.remove = function(pnumber){
+				if(pnumber===undefined){
+					pnumber = self.pnumber;
+				}
+				if(pnumber===undefined){
+					return;
+				}
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+self.headerTitle+pnumber)).test(name)){
+						$.removeCookie(name);
+					}
+				});
+			}
+			self.load = function(){
+//console.log("load "+self.pnumber);
+				if(self.pnumber === undefined){
+					return false;
+				}
+				var txt = $.cookie(self.header);
+//console.log("load "+self.header);
+				if(txt === undefined){
+					return false;
+				}
+				var pnumber_bk = self.pnumber;
+				self.pnumber = undefined;
+				jsEditor.getDoc().setValue(txt);
+				var marker_n = $.cookie(self.header+"MarkerN")||0;
+				for(var i=0;i<marker_n;i++){
+					var mk = $.cookie(self.header+"Marker"+i);
+					jsEditor.markText(mk.from,mk.to,mk);
+				}
+				self.pnumber = pnumber_bk;
+				runInterval = $.cookie(self.headerTitle+"runInterval");
+//console.log("load runInterval "+runInterval);
+				$("#runInterval").val(1/runInterval);
+				return true;
+			},
+			self.save = function(){
+/* 50_problemsのときにはcookieのオーバーフロー対策として以下をコメントアウトする。 */
+				if(self.pnumber === undefined){
+					return;
+				}
+				$.cookie(self.header,jsEditor.getDoc().getValue(),{expires:self.cookieExpiredDate});
+				var markers = jsEditor.getDoc().getAllMarks();
+				var savedMarkerN = 0;
+				markers.forEach(function(m,i){
+					if(m.readOnly){
+						var mkr = m.find();
+						Object.keys(markerDefault).forEach(function(key){
+							mkr[key] = m[key]===undefined?markerDefault[key]:m[key];
+						});
+						$.cookie(self.header+"Marker"+i,mkr,{expires:self.cookieExpiredDate});
+						savedMarkerN++;
+					}
+				});
+				$.cookie(self.header+"MarkerN",savedMarkerN,{expires:self.cookieExpiredDate});
+				$.cookie(self.headerTitle+"runInterval",runInterval,{expires:self.cookieExpiredDate});
+/* for 50 problems */
+			}
+		};
+
+		// jquery initialize function which is called after all html components are ready.
+		$(function(){
+
+			jsEditor = CodeMirror.fromTextArea(document.getElementById("code"),{
+				mode: "javascript",
+				lineNumbers: true,
+				indentUnit: 2,
+				gutters: ["CodeMirror-linenumbers", "breakpoints"],
+			});
+			jsEditor.setSize(null,$(document).height()-$("#run").outerHeight()-36);
+			jsEditor.on("change",function(cm,change){
+				events.call("changed");
+				disk.save();
+			});
+			initArrowMarkers();
+
+			$("#runInterval").val(1/runInterval);
+
+			$("#runInterval").change(function(){
+				runInterval = Math.round(1/$(this).val());
+//console.log($(this).val());
+//console.log(runInterval);
+				disk.save();
+			});
+
+			window.parent.setModule({"name":"code","window":window,"commands":commands});
+		});
+		// init arrow markers
+		function initArrowMarkers(){
+			Object.keys(toolbox_items).forEach(function(elem){
+				var id = "arrowMarker_"+elem;
+				if(toolbox_items[elem].value===true && arrowMarkers[elem]===undefined){
+					toolbox_items[elem].id = id;
+					arrowMarkers[elem] = document.createElement("div");
+					arrowMarkers[elem].id = id;
+					arrowMarkers[elem].className = "arrowMarker";
+					$(document.body).append(arrowMarkers[elem]);
+
+					var img = document.createElement("img");
+					img.setAttribute("src",toolbox_items[elem].img);
+					$("#"+id).append(img);
+					$("#"+id).css({top:$("#run").offset().top,left:$("#run").offset().left});
+				}else if(toolbox_items[elem].value===false && arrowMarkers[elem]!==undefined){
+					$("#"+id).animate({opacity:0});
+				}
+			});
+		}
+		// cancel method
+		function onStop(){
+			counts.click_stop++;
+			clearHighlights();
+			Object.keys(toolbox_items).forEach(function(elem){
+				$("#"+toolbox_items[elem].id).animate({top:$("#run").offset().top,left:$("#run").offset().left});
+				$("#"+toolbox_items[elem].id).animate({opacity:0});
+			});
+			$("#codeCover").remove();
+			codeCover = null;
+			myInterpreter = null;
+		}
+
+		// run method
+		function onRun(params){
+			counts.click_run++;
+			params = params||{};
+			if(false === checkRunParams(params)){
+				return;
+			}
+			var e = {preventDefault:false};
+			events.call("beforeRun",e);
+			if(e.preventDefault===true){
+				return;
+			}
+			createInterpreter(params);
+			var f = function(){
+				if(inSequence(nextSequence,nextSequenceReturnIndex)){
+					highlight();
+					setTimeout(f,runInterval);
+				}else{
+					if(myInterpreter!==null){
+						events.call("afterEnd");
+					}
+					onStop();
+				}
+			}
+			f();
+		}
+		// step run method
+		function onStep(params){
+			counts.click_step++;
+			params = params||{};
+			if(false === checkRunParams(params)){
+				return;
+			}
+			createInterpreter(params);
+			if(!inSequence(nextSequence,nextSequenceReturnIndex) || !highlight()){
+				onStop();
+			}
+		}
+		function checkRunParams(params){
+			if(params.input === undefined){
+				if(false === window.parent.exec({module:"input",command:"checkInput"})){
+					return false;
+				}
+				params.input = window.parent.exec({module:"input",command:"getCode"});
+			}
+			return true;
+		}
+		// create interpreter object from current codes
+		function createInterpreter(params){
+			events.call("beforeStart");
+			if(myInterpreter!==null){
+				return myInterpreter;
+			}
+
+			var codeHeader = unescape(params.input);
+console.log("codeHeader",codeHeader);
+			var codeString = jsEditor.getDoc().getValue();
+console.log("codeString",codeString);
+			var codeTailer = "";
+			codeString = codeHeader + codeString + codeTailer;
+			try{
+				myInterpreter = new Interpreter(codeString,function(interpreter,scope){
+					interpreter.setProperty(scope,"alert",interpreter.createNativeFunction(function(text){
+						text = text ? text.toStirng() : "";
+						return interpreter.createPrimitive(alert(text));
+					}));
+					interpreter.setProperty(scope,"print",interpreter.createNativeFunction(function(text){
+						text = text ? text.toString() : "";
+						return interpreter.createPrimitive(window.parent.exec({module:"output",command:"print",params:text}));
+					}));
+					interpreter.setProperty(scope,"clear",interpreter.createNativeFunction(function(){
+						return interpreter.createPrimitive(window.parent.exec({module:"output",command:"clear"}));
+					}));
+
+					["a","b"].forEach(function(val){
+						interpreter.setProperty(scope,"この時点での変数"+val+"の値を確認する",interpreter.createNativeFunction(function(value){
+							return interpreter.createPrimitive(console.log(val+"="+value));
+						}));
+					});
+				});
+			}catch(e){
+				alert(e);
+				myInterpreter = null;
+				return;
+			}
+			myInterpreter.codeOffset = codeHeader.length;
+			myInterpreter.marked = {"start":-1,"end":-1};
+			window.parent.exec({module:"output",command:"clear"});
+			updateProperties();
+			if(codeCover === null){
+				codeCover = document.createElement("div");
+				codeCover.id = "codeCover";
+				$(document.body).append(codeCover);
+
+				$("#codeCover").css({
+					top:$(".CodeMirror").offset().top,
+					left:$(".CodeMirror").offset().left,
+					width:$(".CodeMirror").width()+"px",
+					height:$(".CodeMirror").height()+"px",
+				});
+			}
+			return myInterpreter;
+		}
+		// executes a piece of next program
+		function next(){
+			try{
+				var ok = myInterpreter.step();
+			}finally{
+
+				// myInterpreter.step() succeeded and there is an next stack and the next program is in visible area
+				if(ok && myInterpreter.stateStack[0]!==undefined){
+					var toStopConds = [
+						{type:"VariableDeclarator",		cond:{done:undefined}},					// 変数初期化前の変数宣言
+						{type:"AssignmentExpression",	cond:{doneLeft:true,doneRight:true}},	// 左右のリテラルの評価済みの代入
+						{type:"CallExpression",			cond:{doneCallee_:true}},				// 引数評価後の関数呼び出し
+						{type:"UpdateExpression",		cond:{done:undefined}},					// ++,--の開始前
+						{type:"ReturnStatement",		cond:{done:true}},						// 戻り値の評価済みのreturn
+						{type:"BinaryExpression",		cond:{doneLeft:true,doneRight:true}},	// 左右のリテラルの評価済みの論理式
+						{type:"IfStatement",			cond:{test:undefined}},					// ifの開始
+//						{type:"IfStatement",			cond:{done:true}},						// ifの終了
+						{type:"WhileStatement",			cond:{test:undefined}},					// whileの開始
+//						{type:"WhileStatement",			cond:{test:true,value:{data:false}}},	// whileの終了
+						{type:"ForInStatement",			cond:{test:undefined}},					// for inの開始
+					];
+//console.log(myInterpreter.stateStack[0].node.type);
+					if(myInterpreter.stateStack[0].node.end<=myInterpreter.codeOffset ||
+						(myInterpreter.stateStack[0].node.start==myInterpreter.marked.start && myInterpreter.stateStack[0].node.end==myInterpreter.marked.end) ||
+						false == toStopConds.some(function(elem){
+						var match = false;
+						if(myInterpreter.stateStack[0].node.type==elem.type){
+							match = !Object.keys(elem.cond).some(function(el){
+								return !contains(myInterpreter.stateStack[0][el],elem.cond[el]);
+							});
+						}
+						return match;
+					})){
+						return next();
+					}
+				}
+				return ok;
+			}
+		}
+		// clears all text markers
+		function clearHighlights(){
+			var marks = jsEditor.getDoc().getAllMarks();
+			for(var m in marks){
+				if(marks[m].limit != true){
+					marks[m].clear();
+				}
+			}
+			if(myInterpreter!=null){
+				myInterpreter.marked = {"start":0,"end":0};
+			}
+		}
+		// creates highligh by a code which will be called next time
+		function highlight() {
+			clearHighlights();
+			if(myInterpreter.stateStack[0]===undefined){
+				return false;
+			}
+
+			var node = myInterpreter.stateStack[0].node;
+			var start = node.start;
+			var end = node.end;
+			var start2 = start - myInterpreter.codeOffset;
+			var end2 = end - myInterpreter.codeOffset;
+
+			var p0 = jsEditor.getDoc().posFromIndex(start2);
+			var p1 = jsEditor.getDoc().posFromIndex(end2);
+			jsEditor.markText(p0,p1,{css:"background:#ff0000;",atomic:true});
+			jsEditor.scrollIntoView({from:p0,to:p1});
+
+			var pos = jsEditor.charCoords(p0);
+
+			Object.keys(toolbox_items).forEach(function(elem){
+				if(toolbox_items[elem].value === true){
+					if($("#"+toolbox_items[elem].id).css("opacity")==0){
+						$("#"+toolbox_items[elem].id).animate({opacity:1},0);
+					}
+					$("#"+toolbox_items[elem].id).animate({
+						"top":(pos.top+14)+"px",
+						"left":(pos.left-4)+"px",
+					},runInterval);
+				}
+			});
+			myInterpreter.marked = {"start":start,"end":end};
+			return true;
+		}
+		function updateProperties(){
+			try{
+				window.parent.exec({module:"watch",command:"update",params:myInterpreter.getScope()});
+			}catch(e){
+				// cannot find scope object, thus update is not executed.
+			}
+		}
+	</script>
+	<style>
+		body {
+//			background: #c0c0c0;
+			font-family: "メイリオ", "meiryo", "Meiryo UI", sans-serif;
+		}
+		.button{
+			font-family: "メイリオ", "meiryo", "Meiryo UI", sans-serif;
+			font-size:large;
+			margin-bottom:10px;
+			background-color: #0076bf;
+			background-image: linear-gradient(#0076bf, #006ea5);
+			border-color: #004b9a;
+			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 1px 0 rgba(255, 255, 255, 0.4);
+			color: #fff;
+			border-radius: 3px;
+			cursor: pointer;
+			line-height: 1.75;
+			position:relative;
+			z-index:10;
+		}
+		#cancel{
+		}
+		.button img {
+			vertical-align: -20%;
+			width:28px;
+		}
+		.arrowMarker {
+			color : "#822";
+			position : absolute;
+			border : "1px solid #000000";
+			margin : "-1px";
+			opacity: 0;
+			z-index : 8;
+		}
+		#codeCover {
+			background: #f0f020;
+			position : absolute;
+			z-index:6;
+			opacity:0.25;
+		}
+	</style>
+</head>
+<body>
+	<div id="contents">
+		<button id="cancel" class="button" type="button" onclick="onStop()"> 停止</button>
+		<button id="run" class="button" type="button" onclick="onRun()"><img src="player.png" /> 実行</button>
+<!--
+		<button id="step" class="button" type="button" onclick="onStep()"><img src="player.png" /> ステップ実行</button>
+-->
+		<span>
+			実行速度
+			<input id="runInterval" type="range" min="0.0005" max="0.02" step="0.0001" style="width:100px;"/>
+		</span>
+		<textarea id="code"></textarea>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!--
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+-->
+	<script src="jquery.cookie.js"></script>
+
+	<script src="jquery.instruct.js"></script>
+	<script src="utils.js"></script>
+	<script>
+		$(function(){
+			window.parent.setModule({"name":"input","window":window,"commands":commands});
+		});
+		var inp = {};
+		inp.toIDString = function(name){
+			return "value_"+name;
+		}
+		inp.toName = function(idString){
+			return idString.match(/value_(.*)/)[1];
+		}
+		// events control object.
+		inp.events = new Events();
+		inp.values = [{}];
+		inp.inputCheck = {};
+		inp.inputCheckParams = {};
+		inp.messages = [""];
+		inp.cur = 0;
+		inp.cls = "datasetItem";
+		inp.initValues = function(){
+			inp.values = [{}];
+			inp.inputCheck = {};
+			inp.inputCheckParams = {};
+			inp.messages = [""];
+			inp.cur = 0;
+		}
+		inp.resetDatasetPanel = function(){
+			$("."+inp.cls).remove();
+			if(inp.values.length>1){
+				for(var i=0;i<inp.values.length;i++){
+					$("#datasetPanel").append("<span id='"+inp.cls+i+"' class='"+inp.cls+"' style='margin:4px'>"+
+						"<a href='javascript:inp.setCurDataset("+i+")'>"+(i+1)+"</a></span>");
+				}
+			}
+			inp.updateMessage(inp.cur);
+			inp.setCurDataset(inp.cur);
+		}
+		inp.getCurDataset = function(){
+			return inp.cur;
+		}
+		inp.setCurDataset = function(index){
+			inp.cur = index;
+			Object.keys(inp.values[inp.cur]).forEach(function(elem){
+				$("#"+inp.toIDString(elem)).val(inp.values[inp.cur][elem]);
+			});
+			inp.updateMessage(inp.cur);
+			$("."+inp.cls).removeClass(inp.cls+"Selected");
+			$("#"+inp.cls+inp.cur).addClass(inp.cls+"Selected");
+			inp.disk.save();
+		}
+		inp.updateMessage = function(index){
+			$("#message").html(inp.messages[index||inp.cur]);
+		}
+		inp.disk = new function(){
+			var self = this;
+			$.cookie.json = true;
+			self.headerTitle = "input.";
+			self.cookieExpiredDate = new Date();
+			self.cookieExpiredDate.setTime(self.cookieExpiredDate.getTime()+(2 * 60 * 60 * 1000));
+			self.pnumber = undefined;
+			self.header = undefined;
+
+			self.autoSave = function(pnumber){
+				self.pnumber = pnumber;
+				self.header = self.headerTitle+self.pnumber;
+			}
+			self.removeAll = function(){
+				$.each($.cookie(),function(name,value){
+					if((new RegExp("^"+self.headerTitle)).test(name)){
+//console.log("remove "+name);
+						$.removeCookie(name);
+					}
+				});
+			}
+			self.load = function(pnumber){
+				self.pnumber = pnumber || self.pnumber;
+//console.log("input load "+self.pnumber);
+				if(self.pnumber === undefined){
+					return false;
+				}
+				var msgs = $.cookie(self.header+".messages");
+//console.log(self.header+".messages = ["+msgs+"]");
+				if(msgs === undefined){
+					return false;
+				}
+				var cur = $.cookie(self.header+".cur");
+				if(cur === undefined){
+					return false;
+				}
+				var names = {};
+				$.each($.cookie(),function(name,value){
+					var ret = name.match(new RegExp(self.headerTitle+self.pnumber+"\\.value\\.([^\.]*)\\.(.*)"));
+					if(ret !== null){
+						var name = ret[1];
+						var key  = ret[2];
+						var data = names[name]||{};
+						data.name = name;
+						data[key] = value;
+						names[name] = data;
+					}
+				});
+				Object.keys(names).forEach(function(name){
+					names[name].nosave = true;
+					window.parent.exec({module:"input",command:"addValue",params:names[name]});
+				});
+				inp.messages = msgs;
+				inp.cur = cur;
+				return true;
+			},
+			self.save = function(params){
+/* 50_problemsのときにはcookieのオーバーフロー対策として以下をコメントアウトする。 */
+				if(self.pnumber === undefined){
+					return;
+				}
+				$.cookie(self.header+".messages",inp.messages,{expires:self.cookieExpiredDate});
+				$.cookie(self.header+".cur",inp.cur,{expires:self.cookieExpiredDate});
+				if(params === undefined){
+					Object.keys(inp.values[0]).forEach(function(elem){
+						var data;
+						if(inp.values.length===1){
+							data = inp.values[0][elem];
+						}else{
+							data = [];
+							inp.values.forEach(function(dataset){
+								data.push(dataset[elem]);
+							});
+						}
+						$.cookie(self.header+".value."+elem+".initValue",data,{expires:self.cookieExpiredDate});
+					});
+				}else{
+					Object.keys(params).forEach(function(elem){
+						$.cookie(self.header+".value."+params.name+"."+elem,params[elem],{expires:self.cookieExpiredDate});
+					});
+				}
+/**/
+			}
+		}
+		inp.inputCheckFuncs = {
+			string:function(str){
+				return /^".*"$/.test(str);
+			},
+			array:function(str,len){
+				var a = eval(str);
+				return /^\[.*\]$/.test(str) && (len===undefined || len===null || a.length===len);
+			},
+			nouse:function(str,ngstr){
+				for(var c in ngstr){
+					if(-1 !== str.indexOf(ngstr[c])){
+						return false;
+					}
+				}
+				return true;
+			},
+		}
+		inp.inputCheckMessage = {
+			string:"ダブルクオーテーションで囲んでください。ダブルクオーテーションで囲むと、文字型のデータとなります。",
+			array:"[ ] で囲んでください。[ ] で囲むと、配列変数になります。または、配列の要素数を確認してください。",
+			nouse:"使用できない文字を使っています。",
+		}
+		var commands = new Commands({
+			getCode:function(str){
+				var code = "";
+				Object.keys(inp.values[inp.cur]).forEach(function(elem){
+					code += elem+"="+inp.values[inp.cur][elem]+";";
+				});
+				return code;
+			},
+			checkInput:function(params){
+				for(var name in inp.inputCheck){
+					var types = inp.inputCheck[name];
+					var paramss = inp.inputCheckParams[name];
+					if(Array.isArray(types)===false){
+						types = [types];
+						paramss = [paramss];
+					}
+					for(var i in types){
+						var type = types[i];
+						var params = paramss[i];
+						if(type!==undefined && false===inp.inputCheckFuncs[type](inp.values[inp.cur][name],params)){
+							alert("入力データ "+name+" は、"+inp.inputCheckMessage[type]);
+							$("#"+inp.toIDString(name)).focus();
+							return false;
+						}
+					}
+				}
+				return true;
+			},
+			text:function(){
+				return this.getCode();
+			},
+			enable:function(){
+				$("body").css("pointer-events","auto");
+				$("body *").css("pointer-events","auto");
+				$(".values").css("background","#ffffff");
+			},
+			disable:function(){
+				$("body").css("pointer-events","none");
+				$("body *").css("pointer-events","none");
+			},
+			setReadOnly:function(params){
+				$(".values").css("pointer-events","none");
+				$(".values").css("background","#e0e0e0");
+			},
+			enableDatasetPanel:function(){
+				$("#datasetPanel").css("pointer-events","auto");
+				$("#datasetPanel *").css("pointer-events","auto");
+			},
+			disableDatasetPanel:function(){
+				$("#datasetPanel").css("pointer-events","none");
+				$("#datasetPanel *").css("pointer-events","none");
+			},
+			addMessage:function(params){
+				if(Array.isArray(params)){
+					params.forEach(function(elem,i){
+						inp.messages[i] = elem;
+					});
+				}else{
+					inp.messages[inp.cur] = params;
+				}
+				inp.disk.save();
+				inp.resetDatasetPanel();
+			},
+			setInitial:function(params){
+				if(true === inp.disk.load(params.pnumber)){
+					inp.resetDatasetPanel();
+				}else{
+					if(Array.isArray(params.value)){
+						params.value.forEach(function(pm){
+							window.parent.exec({module:"input",command:"addValue",params:pm});
+						});
+					}else{
+						window.parent.exec({module:"input",command:"addValue",params:params.value});
+					}
+					window.parent.exec({module:"input",command:"addMessage",params:params.message});
+				}
+			},
+			setMessage:function(params){
+				inp.messages[(params===undefined||params.index===undefined)?inp.cur:params.index] = params.text;
+				inp.disk.save();
+				inp.updateMessage();
+			},
+			getMessage:function(params){
+				return inp.messages[(params===undefined||params.index===undefined)?inp.cur:params.index];
+			},
+			getMessages:function(){
+				return inp.messages;
+			},
+			addValue:function(params){
+//console.log("addValue ",params);
+				if(Array.isArray(params.initValue)){
+					params.initValue.forEach(function(elem,i){
+						if(inp.values.length===i){
+							inp.values[i] = {};
+						}
+						inp.values[i][params.name] = elem;
+					});
+				}else{
+//console.log("initValue ="+params.initValue+" name="+params.name);
+					inp.values[inp.cur][params.name] = params.initValue;
+				}
+				inp.inputCheck[params.name] = params.inputCheck;
+				inp.inputCheckParams[params.name] = params.inputCheckParams
+				$("#input").append("<tr class=\"valuePanel\"><td>"+params.name+" = </td><td><input id=\""+inp.toIDString(params.name)+
+					"\" class=\"values\" type=\"text\" size=\"18\" maxlength=\"18\" value=\""+inp.values[inp.cur][params.name]+"\">"+
+					"</input></td></tr>");
+
+				$(".values").off("keyup");
+				$(".values").on("keyup",function(){
+					var v = $(this).val();
+					if(v !== inp.values[inp.toName(this.id)]){
+						inp.values[inp.cur][inp.toName(this.id)] = v;
+						inp.events.call(inp.toName(this.id));
+						inp.disk.save();
+					}
+				});
+				if(params.nosave===undefined || params.nosave===false){
+					inp.disk.save(params);
+				}
+				inp.resetDatasetPanel();
+			},
+			clear:function(){
+				inp.initValues();
+				$(".valuePanel").remove();
+				$(".datasetItem").remove();
+				$("#message").html("");
+			},
+			clearAllCookies:function(){
+				inp.disk.removeAll();
+			},
+			autoSave:function(params){
+				inp.disk.autoSave(params.pnumber);
+			},
+			zen2han:function(){
+				Object.keys(inp.values[inp.cur]).forEach(function(elem){
+					inp.values[inp.cur][elem] = zen2han(inp.values[inp.cur][elem].toString());
+					$("#"+inp.toIDString(elem)).val(inp.values[inp.cur][elem]);
+				});
+			},
+			val:function(name){
+				return $("#"+inp.toIDString(name)).val();
+			},
+			element:function(name){
+				return $("#"+inp.toIDString(name))[0];
+			},
+			setEvent:function(params){
+				inp.events.add(params);
+			},
+			clearEvent:function(name){
+				inp.events.clear(name);
+			},
+			clearEventByClass:function(className){
+				inp.events.clearByClass(className);
+			},
+			getCurDataset:function(){
+				return inp.getCurDataset();
+			},
+		});
+	</script>
+	<style>
+		body {
+			margin: 10px;
+		}
+		a {
+			font-family: "メイリオ", "meiryo", "Meiryo UI", sans-serif;
+			margin: 0px 2px 0px 2px;
+//			border-color: #004b9a;
+//			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 1px 0 rgba(255, 255, 255, 0.4);
+//			border-radius: 3px;
+			text-decoration: none;
+			color: #000;
+		}
+		.datasetItemSelected {
+			background: #9EDB59;
+		}
+	</style>
+</head>
+<body>
+	<div style="font-size:x-large;">入力</div>
+	<div id="datasetPanel" style="margin:2px;font-size:x-large;"></div>
+	<table id="input" border="0">
+	</table>
+	<div id="message" style="margin:6px"></div>
+</body>
+</html>
+
