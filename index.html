@@ -236,8 +236,19 @@
 				}
 				self.save();
 				self.stepIndex++;
+				console.log(self.problemIndexes.current,self.problems.length)
 				if (self.problemIndexes.current === self.problems.length) {
 					console.log("すべての問題終了");
+
+					console.log("すべての問題終了: スプレッドシートに結果送信", self.problemIndexes.current);
+					post({
+						path: lsUrlPrefix,
+						kadaiId: self.problemIndexes.current,
+						loginId: window.exec({ module: "main", command: "getLoginId" }),
+						loginName: window.exec({ module: "main", command: "getLoginName" }),
+						success: "すべての課題終了",
+					});
+
 					main.events.call("allProblemsFinished");
 					return true;
 				} else {

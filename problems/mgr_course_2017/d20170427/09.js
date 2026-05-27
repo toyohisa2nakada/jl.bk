@@ -105,13 +105,14 @@ print(b);\
 		},
 		function(){
 			$("body").instruct({
-				string:"よくできました。",
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
 				align:'center',
 				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,
 				closeButton:true,
+				closedHandler:function(){problems.next();},
 			});
 		},
 	]);

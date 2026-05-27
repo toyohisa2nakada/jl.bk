@@ -105,7 +105,7 @@ print(b);\
 		},
 		function(){
 			$("body").instruct({
-				string:"これで終わりです。",
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
 				//string:"講師を呼んで、次の課題をもらってください。",
 				//string:"このメッセージを「了解」を押して消して、プログラムとログイン名が見えるように印刷して提出してください。",
 				align:'center',
@@ -114,6 +114,7 @@ print(b);\
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,
 				closeButton:true,
+				closedHandler:function(){problems.next();},
 			});
 		},
 	]);
