@@ -62,7 +62,8 @@
 		function lsRemove(key) { localStorage.removeItem(key); }
 		function lsEach(fn) { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function (k) { fn(k, localStorage.getItem(k)); }); }
 
-		var lsUrlPrefix = (new URLSearchParams(window.location.search).get("path") || window.location.pathname) + ":";
+		const appName = "jl.bk";
+		const lsUrlPrefix = appName + ":" + (new URLSearchParams(window.location.search).get("path") || window.location.pathname) + ":";
 
 		var problems = new function () {
 			var self = this;
@@ -870,7 +871,6 @@
 						"style=\"width:200px;height:0px;border:solid 1px;position:absolute;" +
 						"top:" + t + "px;right:" + l + "px;background:lightgrey;padding:6px;\">" +
 						"</div>");
-					//					$("#toolbox").append("<div style=\"margin:4px;\"><button onClick=\"javascript:main.checkZen();\">全角=>半角変換</button></div>");
 					Object.keys(main.modules).forEach(function (elem) {
 						var html = exec({ module: elem, command: "getToolboxItem" });
 						if (html !== false) {
@@ -886,7 +886,15 @@
 			self.logoff = function () {
 				if (confirm("全ての回答を削除してログインし直します。よろしいですか？")) {
 					$("body").clearInstruct();
+
 					lsRemove("loginId");
+					lsRemove("loginName");
+					lsEach(function (name, value) {
+						if ((new RegExp("^" + appName)).test(name)) {
+							lsRemove(name);
+						}
+					});
+
 					["input", "code", "output"].forEach(function (elem) {
 						window.exec({ module: elem, command: "autoSave", params: { pnumber: undefined } });
 					});
