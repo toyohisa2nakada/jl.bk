@@ -122,14 +122,14 @@ print(x);\
 		},
 		function(){
 			$("body").instruct({
-				//string:"このメッセージを「了解」を押して消して、プログラムとログイン名が見えるように印刷して提出してください。",
-				string:"講師を呼んで、次の課題をもらってください。",
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
 				align:'center',
 				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,
 				closeButton:true,
+				closedHandler:function(){problems.next();},
 			});
 		},
 	]);
