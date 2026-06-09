@@ -52,7 +52,19 @@
 		function lsEach(fn) { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function (k) { fn(k, localStorage.getItem(k)); }); }
 
 		const appName = "jl.bk";
-		const lsUrlPrefix = appName + ":" + (new URLSearchParams(window.location.search).get("path") || window.location.pathname) + ":";
+		const pathName = (new URLSearchParams(window.location.search).get("path") || window.location.pathname);
+		const lsUrlPrefix = appName + ":" + pathName + ":";
+		document.addEventListener('DOMContentLoaded', () => {
+			const elem = document.getElementById("pathPanel");
+			elem.textContent = pathName;
+			const match = pathName.match(/d(\d{8})/);
+			if (match) {
+				const dateNum = parseInt(match[1], 10);
+				const hue = (dateNum * 137.5) % 360;
+				elem.style.color = `hsl(${hue}, 70%, 40%)`;
+				elem.style.backgroundColor = `hsl(${(hue + 180) % 360}, 70%, 90%)`;
+			}
+		});
 
 		var problems = new function () {
 			var self = this;
@@ -225,7 +237,7 @@
 				}
 				self.save();
 				self.stepIndex++;
-				console.log(self.problemIndexes.current,self.problems.length)
+				console.log(self.problemIndexes.current, self.problems.length)
 				if (self.problemIndexes.current === self.problems.length) {
 					console.log("すべての問題終了");
 
@@ -496,6 +508,10 @@
 		#problemsPanel {
 			padding-left: 10px;
 			padding-right: 10px;
+		}
+
+		#pathPanel {
+			font-size: 11px;
 		}
 
 		.problemButton {
@@ -971,6 +987,7 @@
 			<span id="TopPanelContents">jl.bk</span>
 			<span id="dayPanel" style="margin:0 8px;padding:0px 0px;background:#ffff00;color:#300066;"></span>
 			<span id="problemsPanel"></span>
+			<span id="pathPanel"></span>
 			<span id="openReqPanel"></span>
 			<span id="toolboxButtonPanel">
 				<a href="javascript:main.logoff()" id="toolboxLoginName" style="display:inline-block">noname</a>
