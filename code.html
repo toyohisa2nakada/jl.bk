@@ -64,6 +64,8 @@
 			disable:function(){
 				$("body").css("pointer-events","none");
 				$("body *").css("pointer-events","none");
+
+				$(".CodeMirror-scroll, .CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler").css("pointer-events","auto");
 			},
 			setText:function(str){
 				jsEditor.getDoc().setValue(str);
@@ -197,12 +199,10 @@
 				});
 			}
 			self.load = function(){
-//console.log("load "+self.pnumber);
 				if(self.pnumber === undefined){
 					return false;
 				}
 				var txt = lsGet(self.header);
-//console.log("load "+self.header);
 				if(txt === undefined){
 					return false;
 				}
@@ -216,7 +216,6 @@
 				}
 				self.pnumber = pnumber_bk;
 				runInterval = lsGet(self.headerTitle+"runInterval");
-//console.log("load runInterval "+runInterval);
 				$("#runInterval").val(1/runInterval);
 				return true;
 			},
@@ -264,8 +263,6 @@
 
 			$("#runInterval").change(function(){
 				runInterval = Math.round(1/$(this).val());
-//console.log($(this).val());
-//console.log(runInterval);
 				disk.save();
 			});
 
@@ -359,9 +356,7 @@
 			}
 
 			var codeHeader = unescape(params.input);
-console.log("codeHeader",codeHeader);
 			var codeString = jsEditor.getDoc().getValue();
-console.log("codeString",codeString);
 			var codeTailer = "";
 			codeString = codeHeader + codeString + codeTailer;
 			try{
@@ -428,7 +423,6 @@ console.log("codeString",codeString);
 //						{type:"WhileStatement",			cond:{test:true,value:{data:false}}},	// whileの終了
 						{type:"ForInStatement",			cond:{test:undefined}},					// for inの開始
 					];
-//console.log(myInterpreter.stateStack[0].node.type);
 					if(myInterpreter.stateStack[0].node.end<=myInterpreter.codeOffset ||
 						(myInterpreter.stateStack[0].node.start==myInterpreter.marked.start && myInterpreter.stateStack[0].node.end==myInterpreter.marked.end) ||
 						false == toStopConds.some(function(elem){

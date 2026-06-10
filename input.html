@@ -51,10 +51,8 @@
 			return inp.cur;
 		}
 		inp.setCurDataset = function (index) {
-console.log("setCurDataset --- ", index);
 			inp.cur = index;
 			Object.keys(inp.values[inp.cur]).sort().forEach(function (elem) {
-console.log("setCurDataset ", elem, inp.values[inp.cur][elem]);
 				$("#" + inp.toIDString(elem)).val(inp.values[inp.cur][elem]);
 			});
 			inp.updateMessage(inp.cur);
