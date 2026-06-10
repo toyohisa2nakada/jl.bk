@@ -51,8 +51,10 @@
 			return inp.cur;
 		}
 		inp.setCurDataset = function (index) {
+console.log("setCurDataset --- ", index);
 			inp.cur = index;
-			Object.keys(inp.values[inp.cur]).forEach(function (elem) {
+			Object.keys(inp.values[inp.cur]).sort().forEach(function (elem) {
+console.log("setCurDataset ", elem, inp.values[inp.cur][elem]);
 				$("#" + inp.toIDString(elem)).val(inp.values[inp.cur][elem]);
 			});
 			inp.updateMessage(inp.cur);
@@ -119,7 +121,7 @@
 						names[name] = data;
 					}
 				});
-				Object.keys(names).forEach(function (name) {
+				Object.keys(names).sort().forEach(function (name) {
 					names[name].nosave = true;
 					window.parent.exec({ module: "input", command: "addValue", params: names[name] });
 				});
@@ -135,20 +137,20 @@
 					lsSet(self.header + ".messages", inp.messages);
 					lsSet(self.header + ".cur", inp.cur);
 					if (params === undefined) {
-						Object.keys(inp.values[0]).forEach(function (elem) {
+						Object.keys(inp.values[0]).sort().forEach(function (elem) {
 							var data;
 							if (inp.values.length === 1) {
 								data = inp.values[0][elem];
 							} else {
 								data = [];
-								inp.values.forEach(function (dataset) {
+								inp.values.sort().forEach(function (dataset) {
 									data.push(dataset[elem]);
 								});
 							}
 							lsSet(self.header + ".value." + elem + ".initValue", data);
 						});
 					} else {
-						Object.keys(params).forEach(function (elem) {
+						Object.keys(params).sort().forEach(function (elem) {
 							lsSet(self.header + ".value." + params.name + "." + elem, params[elem]);
 						});
 					}
@@ -180,7 +182,7 @@
 		var commands = new Commands({
 			getCode: function (str) {
 				var code = "";
-				Object.keys(inp.values[inp.cur]).forEach(function (elem) {
+				Object.keys(inp.values[inp.cur]).sort().forEach(function (elem) {
 					code += elem + "=" + inp.values[inp.cur][elem] + ";";
 				});
 				return code;
