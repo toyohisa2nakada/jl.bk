@@ -30,20 +30,28 @@
 
 
 	<script>
-		function post(postData) {
+		async function post(postData) {
 			const gasURL = "https://script.google.com/macros/s/AKfycbxgv6aKNzMsskt3yZ_5Olic-dhk-jfztPYlNaXChtRO6M_8eyaGrHnpHRA9lTQXTPo4Sg/exec";
-
 			console.log("postData", postData);
-			fetch(gasURL, {
-				method: "POST",
-				mode: "no-cors",
-				headers: { "Content-Type": "text/plain" },
-				body: JSON.stringify(postData)
-			}).then(() => {
-				console.log("送信完了！スプレッドシートを確認してください。");
-			}).catch(err => {
-				console.error("エラー:", err);
-			});
+
+			const maxRetries = 2;
+			const delay = 100;
+
+			for (let i = 0; i <= maxRetries; i += 1) {
+				try {
+					await fetch(gasURL, {
+						method: "POST",
+						mode: "no-cors",
+						headers: { "Content-Type": "text/plain" },
+						body: JSON.stringify(postData)
+					});
+					console.log("送信完了！スプレッドシートを確認してください。");
+					return;
+				} catch (err) {
+					console.error(`エラー (試行 ${i + 1}回目):`, err);
+					await new Promise(resolve => setTimeout(resolve, delay));
+				};
+			}
 		}
 
 		function lsSet(key, val) { localStorage.setItem(key, val); }
