@@ -18,53 +18,46 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>7"]);
+			plib.setExpectedOutputs(["出力<br>p<br>0<br>p<br>2"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"1"},
-					{name:"b",initValue:"2"},
+					{name:"a",initValue:"[1,0,1,2]"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
- \n\
-if(a == 1 && b == 1){\n\
-	print(\"6\");\n\
-}\n\
-if(a == 1 || b == 1){\n\
-	print(\"7\");\n\
+for(var i in a){\n\
+	if(a[i]==1){\n\
+		print(\"p\");\n\
+	}else{\n\
+		print(a[i]);\n\
+	}\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"disable"});
+			window.exec({module:"code",command:"enable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_if");
-			HINT.hint("not_equal");
-			HINT.hint("not");
-			HINT.hint("greater");
-			HINT.hint("greater_equal");
-			HINT.hint("and");
-			HINT.hint("or");
-			HINT.hint("print");
-			HINT.hint("double_quotation");
-			HINT.hint("output");
-
+			HINT.hint("output_count1");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
 			var w = $("#output")[0].contentWindow;
-			w.$("#input").instruct({
+			w.$("#inputPanel").instruct({
 				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
 				closedHandler:function(){
@@ -74,6 +67,18 @@ if(a == 1 || b == 1){\n\
 				},
 			});
 		},
+/*
+		function(){
+			var w = $("#hint")[0].contentWindow;
+			w.$("#label").instruct({
+				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+*/
 		function(){
 			window.exec({module:"code",command:"setEvent",params:{
 				name:"beforeRun",

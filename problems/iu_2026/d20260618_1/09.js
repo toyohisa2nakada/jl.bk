@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,96 +18,53 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>す<br>も<br>も<br>も<br>も<br>も<br>も<br>も<br>も<br>の<br>う<br>ち"]);
+			plib.setExpectedOutputs(["出力 1","出力 2","出力 3","出力 4","出力 1"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:"[1,1,1,1,1,1,1,1,0]"},
+					{name:"a",initValue:["1","3","4","5","1"]},
+					{name:"b",initValue:["2","1","4","6","1"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:3,ch:0},{line:6,ch:0}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
-\/\/ \n\
-print(\"す\");\n\
-for(var i in a){\n\
-	if(a[i]==1){\n\
-		print(\"も\");\n\
-	}else{\n\
-		print(\"の\");\n\
-		print(\"う\");\n\
-		print(\"ち\");\n\
-	}\n\
-}\
+\/\/ aが1のときに1、bが1のときに2、\n\
+\/\/ それ以外でかつaとbの値が同じ場合には3、違う場合には4を\n\
+\/\/ 出力してください。出力する数字は、1つです。\n\
+\n\
+\n\
+\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			window.exec({module:"code",command:"setReadOnly"});
-
-			window.exec({module:"output",command:"setMessage",params:{
-				text:"全角で入力してください。",
-			}});
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("output_first");
-			HINT.hint("3line_print");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("equal");
+			HINT.hint("if_if");
+			HINT.hint("if_elseif_else");
+			HINT.hint("equal2");
+			HINT.hint("print");
+			HINT.hint("double_quotation");
+			HINT.hint("prev");
+
+			plib.startOutputCheck();
 			problems.next();
-		},
-		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。<br>文字は全角で入力してください。",
-				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
-			});
 		},
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"プログラムと入力データが変わっています。",
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
+				closedHandler:function(){},
 			});
-		},
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");
@@ -121,18 +78,6 @@ for(var i in a){\n\
 				align:'center',
 				arrow:false,
 				font_size:'72px',
-				offsetX:$("body").width()/2,
-				offsetY:$("body").height()/2+200,
-				targetEventToClose:null,
-				closeButton:true,
-				closedHandler:function(){problems.next();},
-			});
-		},
-		function(){
-			$("body").instruct({
-				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
-				align:'center',
-				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,

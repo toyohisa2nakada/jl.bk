@@ -3,14 +3,14 @@ var HINT = (new function(){
 	var self = this;
 	self.scriptName = "";
 	self.hints = {
-		"10_4":function(key){
+		"string":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"ほぼ答えのヒント",
+				name:"pの出力",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#input")[0].contentWindow;
 					w.$("#input").instruct({
-						string:"入力の4つの数字を、そのままスペース等を入れずにaから順の4桁の数字にして、その数字をネットで検索してみて下さい。",
+						string:"文字を出力するには、ダブルクオーテーション( \" )でその文字を囲む必要があります。ダブルクオーテーションで囲まない文字は、プログラムの中では変数として扱われます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -18,14 +18,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"10_3":function(key){
+		"output_count1":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"大きなヒント",
+				name:"出力される個数?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"上手くググれると、答えが見つかります。",
+						string:"出力される文字は、変数aの中の数字の個数と同じです。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -33,14 +33,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"10_2":function(key){
+		"output_count2":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"普通のヒント",
+				name:"出力される個数?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"分数を使います。",
+						string:"printが実行された回数です。<br>print(\"p\");は削除されていることに注意してください。<br>forは変数aの数字の個数分だけ繰り返しますが、そのうち、ifの条件に一致しないときだけ、printは実行されます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -48,14 +48,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"10_1":function(key){
+		"output_count3":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"軽いヒント",
+				name:"出力される個数?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"4つの数字で10を作ります。",
+						string:"ifの条件に一致するときは2つの文字が出力され、そうではないときには1つの文字が出力されます。変数aの数値には1は2つあるので、ifの条件に2回一致して、2回不一致となり、計6個の文字が出力されます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -63,14 +63,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"9_1":function(key){
+		"output_count4":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"op変数",
+				name:"出力される個数?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"op変数の値ごとに、何をするべきか考えてみて下さい。例えばop==1のときは..., op==2のときは...",
+						string:"aの中の数字の個数分だけ出力されます。それは、ifの{ }、elseの{ }の中にそれぞれ1つのprintがあり、if、elseは必ずどちらか1つの{ }を実行するため、forの{ }の中を繰り返す数とprintの実行される数が一致するからです。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -78,14 +78,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"var_equal":function(key){
+		"output_first":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"var x =",
+				name:"最初に表示される文字?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"変数xを宣言し、初期値として = の右側の数字や文字を代入します。",
+						string:"プログラムの3行目のprint(\"す\");は、ifの{ }の中に入っているわけではないので、必ず実行されます。よって最初に表示される文字は「す」です。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -93,14 +93,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"var":function(key){
+		"2line_print":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"var",
+				name:"2行連続したprintは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"var a;とすると、aという名前の変数をプログラムの中で使う、と宣言したことになります。多くのプログラミング言語では、変数aを使いたい場合には、最初に宣言をする必要があります。但し、このJavaScriptは例外で、a = 1;とvarを書かなくても、その場で変数aを宣言したことと同じになります。ただ変数を宣言せずに使用すると、他の言語でプログラムを書くときに間違えやすいので、JavaScriptでも変数を宣言することが多いです。",
+						string:"printは文字を出力したら改行するため、例えばprint(\"p\");print(\"r\");の出力は、<br>p<br>r<br>となります。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -108,14 +108,32 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"and":function(key){
+		"3line_print":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"&&",
+				name:"3行連続したprintは?",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					self.showInCenter("print(\"の\");print(\"う\");print(\"ち\");の出力は、<br>の<br>う<br>ち<br>となります。");
+/*
+					var w = $("#code")[0].contentWindow;
+					w.$("#code").instruct({
+						string:"print(\"の\");print(\"う\");print(\"ち\");の出力は、<br>の<br>う<br>ち<br>となります。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+*/
+				},
+			}});
+		},
+		"for":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"forとは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"「かつ」を表し、条件1 && 条件2の場合、条件1と条件2の両方が一致する場合に、条件1&&条件2は一致します。",
+						string:"「for」は、繰り返し処理といって、このfor(var i in a)の場合は、変数aの中にある数字の個数分だけ{ }の中の処理を繰り返します。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -123,14 +141,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"or":function(key){
+		"if":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"||",
+				name:"ifとは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"「または」を表し、条件1 || 条件2の場合、条件1か、条件2、またはどちらもが一致する場合に、条件1||条件2は一致します。",
+						string:"if(条件){ A }else{ B }は、条件に一致するときにはAを、そうではない場合にはBを実行します。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -138,14 +156,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"not":function(key){
+		"b_i":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"!",
+				name:"b[i]とは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"「否定」を表し、!条件1の場合、条件1が一致しない場合に、!条件1は一致します。",
+						string:"b[i]は、例えば、a[i]が1番目の数値を表しているときに、変数bの1番目の数値を表します。これは、a[i]がaのi番目なので、そのiをそのまま使ってb[i]とするとｂのi番目になるということです。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -153,14 +171,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"if_if":function(key){
+		"a_i":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"if, if .. ",
+				name:"a[i]とは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"それぞれのifは独立しています。よって例えば最初のif(条件)に一致しても、しなくても、次のif(条件)の条件は評価されます。それに対してif, else ifは、最初のif(条件)に一致しない場合だけ、次のelse ifの条件が評価されます。言い換えると、最初のif(条件)に一致したら、そのあとのelse if(条件)はすべて無視されます。",
+						string:"a[i]は、変数aのi番目の数値を表します。forは、変数aの数値の個数だけ{ }の中を実行し、その繰り返し中の1回目のa[i]は、aの1つ目の数字、2回目には、aの2つ目の数字を表すことになります。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -168,44 +186,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"if_else":function(key){
+		"equal":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"if, else",
+				name:"== とは?",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"if(条件)の条件に一致した場合はそのあとの{ }の中を実行します。ifの条件に一致しない場合は、elseのあとの{ }の中を実行します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"if_elseif":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"if, else if",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"if(条件)の条件に一致した場合はそのあとの{ }の中を実行します。ifの条件に一致しない場合は、else if(条件)の条件がチェックされて一致すれば、そのあとの{ }の中が実行されます。そして、if, else ifのどの条件にも一致しない場合は、なにも処理を実行しません。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"if_elseif_else":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"if, else if, else",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"if(条件)の条件に一致した場合はそのあとの{ }の中を実行します。ifの条件に一致しない場合は、else if(条件)の条件がチェックされて一致すれば、そのあとの{ }の中が実行されます。そして、if, else ifのどの条件にも一致しない場合は、elseのあとの{ }の中が実行されます。",
+						string:"==の左右が一致しているかどうかを判定する条件を作ります。例えば、a==1の場合、変数aの中に1が入っていると条件に一致します。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -220,7 +208,7 @@ var HINT = (new function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"右側の「出力」に文字や数値を表示します。",
+						string:"printのあとの( )の中を出力します。print(p);となっていれば変数pの中身、print(\"p\");の場合は、pが出力されます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -228,134 +216,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"double_quotation":function(key){
+		"a":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"\"a\"",
+				name:"a",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"\"a\"は、文字aを表します。それに対して \" (ダブルクォーテーション）の無いaは、変数aを表します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"smaller_equal":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"<=",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a <= bの場合、aとbが同じときを含めて、aの方がbよりも小さい場合に条件に一致します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"smaller":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"<",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a < bの場合、aの方がbよりも小さい場合に、条件に一致します。aとbが同じ場合は、一致しません。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"greater_equal":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:">=",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a >= bの場合、aとbが同じときを含めて、aの方がbよりも大きい場合に条件に一致します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"greater":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:">",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a > bの場合、aの方がbよりも大きい場合に、条件に一致します。aとbが同じ場合は、一致しません。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"not_equal":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"!=",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a != bの場合、変数aの中身と変数bの中身が違う場合に、条件に一致します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"equal1":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"=",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"=の右の数値を左にコピーします。a=1ならば、変数aに1が代入されます。a=bならば、変数aには変数bの中身がコピーされます。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"equal2":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"==",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"==の左右が一致しているかどうかを判定する条件を作ります。例えば、a==1の場合、変数aの中に1が入っていると条件に一致します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"output":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"複数のprint",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#output")[0].contentWindow;
+					var w = $("#input")[0].contentWindow;
 					w.$("#input").instruct({
-						string:"複数の出力がある場合、スペースか改行で区切ってください。",
+						string:"aは、配列変数といい、複数の数字を格納することができます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -363,13 +231,13 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"prev":function(key){
+		"re_explain":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"前の問題に戻る",
+				name:"この問題の説明を最初から見る",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					$("#problemsPanel").instruct({
-						string:"この数値のところをクリックすると前の問題に戻れます。途中まで書いたプログラムは自動的にセーブされているので、前の問題に戻っても、今書いているプログラムが消えることはありません。",
+						string:"この数値の緑色になっているところが、現在の問題番号です。そこをクリックすると最初から説明が行われます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -377,19 +245,11 @@ var HINT = (new function(){
 				},
 			}});
 		},
-	};
-	self.keys = function(key){
-		var keyString = "HINTS";
-		for(var key in self.hints){
-			keyString += ","+key;
-		}
-		return keyString;
 	};
 	self.hint = function(key){
 		self.hints[key](key);
 	};
 	self.setScriptName = function(scriptName){
-//console.log(self.keys());
 		self.scriptName = scriptName;
 	};
 	self.showInCenter = function(str){

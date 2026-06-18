@@ -18,42 +18,54 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>1<br>0<br>1<br>0"]);
+			plib.setExpectedOutputs(["出力<br>5"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"[1,0,1,0]"},
+					{name:"a",initValue:"1"},
+					{name:"b",initValue:"2"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
-for(var i in a){\n\
-	print(a[i]);\n\
-}\
+ \n\
+if(a+1 > b){\n\
+	print(\"4\");\n\
+}\n\
+if(a+1 >= b){\n\
+	print(\"5\");\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
+			window.exec({module:"code",command:"disable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("a");
-			HINT.hint("a_i");
-			HINT.hint("for");
+			HINT.hint("if_if");
+			HINT.hint("not_equal");
+			HINT.hint("not");
+			HINT.hint("greater");
+			HINT.hint("greater_equal");
+			HINT.hint("and");
+			HINT.hint("or");
+			HINT.hint("print");
+			HINT.hint("double_quotation");
+			HINT.hint("output");
 
 			problems.next();
 		},
 		function(){
 			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"次は、出力される文字を入力して、実行してください。",
+			w.$("#input").instruct({
+				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
 				closedHandler:function(){
 					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");

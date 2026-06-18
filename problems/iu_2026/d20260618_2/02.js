@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,83 +18,74 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>2<br>3"]);
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				value:[
-					{name:"a",initValue:"1"},
-					{name:"b",initValue:"2"},
-				],
-			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ 問題は、左の入力のところに表示されます。\n\
 \/\/ \n\
- \n\
-if(a == b){\n\
-	print(\"1\");\n\
-}\n\
-if(a != b){\n\
-	print(\"2\");\n\
-}\n\
-if(!(a == b)){\n\
-	print(\"3\");\n\
-}\n\
+for(var i in a){\n\
+	print(a[i]);\n\
+}\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"disable"});
+//			window.exec({module:"input",command:"setReadOnly"});
+			window.exec({module:"code",command:"enable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_if");
-			HINT.hint("not_equal");
-			HINT.hint("not");
-			HINT.hint("print");
-			HINT.hint("double_quotation");
-			HINT.hint("output");
-
+			HINT.hint("re_explain");
+			HINT.hint("string");
+			HINT.hint("for");
+			HINT.hint("a_i");
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#input").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"前の問題と、プログラムは変わっていません。もう一度、入力データをセットする練習をします。",
 				closeButton:true,
 				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
 					problems.next();
 				},
 			});
 		},
 		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
+			var w = $("#hint")[0].contentWindow;
+			w.$("#label").instruct({
+				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
+				closeButton:true,
+				closedHandler:function(){
 					problems.next();
 				},
+			});
+		},
+		function(){
+			plib.setExpectedOutputs(["出力<br>3<br>-1<br>p<br>5"]);
+			var instmsg = "3 -1 p 5と出力される入力データをセットしてください。pは、そのまま p とだけ書いても出力されません。pを何かの文字で囲みます。";
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				message:instmsg,
+				value:[
+					{name:"a",initValue:""},
+				],
+			}});
+			var w = $("#input")[0].contentWindow;
+			w.$("#input").instruct({
+				string:instmsg,
+				closeButton:true,
+			});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",
+				func:function(params,e){
+					var out = window.exec({module:"output",command:"outputs"});
+					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
+						problems.next();
+					}
+				}
 			}});
 		},
 		function(){

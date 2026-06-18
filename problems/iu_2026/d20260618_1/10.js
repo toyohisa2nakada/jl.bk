@@ -5,7 +5,6 @@ new function(){
 
 	var self_n = problems.problems.push([
 		function(){
-//console.log("scriptName=\""+scriptName+"\"");
 			plib.log.add(scriptName+":startProblem");
 			window.exec({module:"main",command:"updateStatus",params:{scriptName:scriptName}});
 
@@ -19,16 +18,15 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 3"]);
+			plib.setExpectedOutputs(["出力 1"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"2"},
-					{name:"b",initValue:"3"},
+					{name:"a",initValue:"5"},
+					{name:"b",initValue:"1"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
@@ -36,12 +34,10 @@ new function(){
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
  \n\
-if(a == b){\n\
+if(a == 1 || b == 1){\n\
 	print(\"1\");\n\
-}else if(a > b){\n\
-	print(\"2\");\n\
 }else{\n\
-	print(\"3\");\n\
+	print(\"2\");\n\
 }\n\
 "}});
 
@@ -51,11 +47,8 @@ if(a == b){\n\
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_elseif_else");
-			HINT.hint("equal2");
-			HINT.hint("greater");
-			HINT.hint("print");
-			HINT.hint("double_quotation");
+			HINT.hint("if_else");
+			HINT.hint("or");
 
 			problems.next();
 		},

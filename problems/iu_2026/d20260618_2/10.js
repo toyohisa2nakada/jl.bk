@@ -18,75 +18,51 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 1"]);
+			plib.setExpectedOutputs(["出力 かー","出力 わん","出力 ちゅんちゅん","出力 にゃー"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:"5"},
-					{name:"b",initValue:"1"},
+					{name:"c",initValue:["\"からす\"","\"いぬ\"","\"すずめ\"","\"ねこ\""]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:5,ch:4},{line:5,ch:14}],[{line:6,ch:8},{line:6,ch:13}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ それぞれの入力に対して正しく出力するプログラムを作成してください。\n\
 \/\/ \n\
- \n\
-if(a == 1 || b == 1){\n\
-	print(\"1\");\n\
-}else{\n\
-	print(\"2\");\n\
-}\n\
+var a = [\"ねこ\",\"いぬ\",\"からす\",\"すずめ\"];\n\
+var b = [\"にゃー\",\"わん\",\"かー\",\"ちゅんちゅん\"];\n\
+for(var i in a){\n\
+	if(          ){\n\
+		print(     );\n\
+	}\n\
+}\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"disable"});
-			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"enable"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_else");
-			HINT.hint("or");
-
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
+				closedHandler:function(){},
 			});
-		},
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");
@@ -100,6 +76,18 @@ if(a == 1 || b == 1){\n\
 				align:'center',
 				arrow:false,
 				font_size:'72px',
+				offsetX:$("body").width()/2,
+				offsetY:$("body").height()/2+200,
+				targetEventToClose:null,
+				closeButton:true,
+				closedHandler:function(){problems.next();},
+			});
+		},
+		function(){
+			$("body").instruct({
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
+				align:'center',
+				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,

@@ -18,44 +18,43 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 1","出力 2","出力 3","出力 4","出力 1"]);
+			plib.setExpectedOutputs(["出力 ある","出力 ","出力 ある","出力 "]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:["1","3","4","5","1"]},
-					{name:"b",initValue:["2","1","4","6","1"]},
+					{name:"c",initValue:["1","-1","3","8"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:3,ch:0},{line:6,ch:0}]],
+				setEditable:[[{line:4,ch:5},{line:4,ch:9}],[{line:4,ch:13},{line:4,ch:17}]],
 				text:"\
-\/\/ aが1のときに1、bが1のときに2、\n\
-\/\/ それ以外でかつaとbの値が同じ場合には3、違う場合には4を\n\
-\/\/ 出力してください。出力する数字は、1つです。\n\
-\n\
-\n\
-\n\
+\/\/ それぞれの入力に対して正しく出力するプログラムを作成してください。\n\
+\/\/ \n\
+var a = [1,2,3,4,5,6,7];\n\
+for(var i in a){\n\
+	if(      ==      ){\n\
+		print(\"ある\");\n\
+	}\n\
+}\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_if");
-			HINT.hint("if_elseif_else");
-			HINT.hint("equal2");
-			HINT.hint("print");
-			HINT.hint("double_quotation");
-			HINT.hint("prev");
-
-			plib.startOutputCheck();
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("b_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
@@ -63,7 +62,8 @@ new function(){
 			w.$(".CodeMirror").instruct({
 				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+				},
 			});
 		},
 		function(){

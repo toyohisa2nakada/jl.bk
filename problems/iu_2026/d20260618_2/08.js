@@ -18,33 +18,24 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 3"]);
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:"例 1 1",
-				value:[
-					{name:"a",initValue:""},
-					{name:"b",initValue:""},
-				],
-			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 3と出力される入力をセットしてください。\n\
+\/\/ 適切な入力データをセットしてください。\n\
 \/\/ \n\
- \n\
-if(a == 1 && b == 1){\n\
-	print(\"1\");\n\
-}else if(a == 1){\n\
-	print(\"2\");\n\
-}else if(b == 1){\n\
-	print(\"3\");\n\
-}else{\n\
-	print(\"4\");\n\
-}\n\
+var c = [1,2,3,4,5,6,7];\n\
+for(var i in a){\n\
+	if(a[i]==b[i]){\n\
+		print(c[i]);\n\
+	}else{\n\
+		print(\"z\");\n\
+	}\n\
+}\
 "}});
 
 			window.exec({module:"input",command:"enable"});
@@ -53,19 +44,38 @@ if(a == 1 && b == 1){\n\
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_elseif_else");
-			HINT.hint("and");
-			HINT.hint("equal2");
-			HINT.hint("print");
-			HINT.hint("double_quotation");
-			HINT.hint("output");
-
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("b_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"プログラムは変わっていません。ただし、変数cは変更不可となっています。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+		function(){
+			var ans = "1 2 z 4 5 z 7";
+			plib.setExpectedOutputs(["出力<br>"+ans.replace(/ /g,"<br>")]);
+			var instmsg = ans+" と表示されるように、入力データをセットしてください。<br>入力例： [1,2,3]<br>半角で入力してください。";
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				message:instmsg,
+				value:[
+					{name:"a",initValue:""},
+					{name:"b",initValue:""},
+				],
+			}});
 			var w = $("#input")[0].contentWindow;
 			w.$("#input").instruct({
-				string:"3と表示する入力をセットしてください。",
+				string:instmsg,
 				closeButton:true,
 			});
 			window.exec({module:"code",command:"setEvent",params:{
