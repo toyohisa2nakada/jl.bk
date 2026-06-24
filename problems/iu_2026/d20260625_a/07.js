@@ -18,52 +18,46 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 q"]);
+			plib.setExpectedOutputs(["出力<br>p<br>q<br>z<br>s<br>z"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"3"},
+					{name:"a",initValue:"[0,1,2,3,4]"},
+					{name:"b",initValue:"[0,1,4,3,2]"},
+					{name:"c",initValue:"[\"p\",\"q\",\"r\",\"s\",\"t\"]"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
-\/\/ 例えばここに示すプログラムは、\n\
-\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
-\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
-\/\/   if(...){\n\
-\/\/    print(\"p\");\n\
-\/\/   }else{\n\
-\/\/    print(\"q\");\n\
-\/\/   }\n\
-\/\/ \n\
-\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
-\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
-\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
-\/\/ \n\
- \n\
-if(a != 3){\n\
-	print(\"p\");\n\
-}else{\n\
-	print(\"q\");\n\
+for(var i in a){\n\
+	if(a[i]==b[i]){\n\
+		print(c[i]);\n\
+	}else{\n\
+		print(\"z\");\n\
+	}\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			//window.exec({module:"code",command:"disable"});
+			window.exec({module:"code",command:"enable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("not_equal");
-			HINT.hint("if_else");
-			HINT.hint("double_quotation");
-			HINT.hint("print");
-
+			HINT.hint("output_count4");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("b_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
@@ -74,6 +68,16 @@ if(a != 3){\n\
 				closedHandler:function(){
 					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
 					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
+				},
+			});
+		},
+		function(){
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"新しく変数cが追加され、プログラムも入力データも変更されています。",
+				closeButton:true,
+				closedHandler:function(){
 					problems.next();
 				},
 			});

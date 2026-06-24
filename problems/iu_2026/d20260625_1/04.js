@@ -18,41 +18,55 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>p<br>0<br>p<br>2"]);
+			plib.setExpectedOutputs(["出力<br>o<br>q<br>r"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"[1,0,1,2]"},
+					{name:"a",initValue:"3"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
-for(var i in a){\n\
-	if(a[i]==1){\n\
-		print(\"p\");\n\
-	}else{\n\
-		print(a[i]);\n\
-	}\n\
-}\
+\/\/ 例えばここに示すプログラムは、\n\
+\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
+\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
+\/\/   if(...){\n\
+\/\/    print(\"p\");\n\
+\/\/   }else{\n\
+\/\/    print(\"q\");\n\
+\/\/   }\n\
+\/\/ \n\
+\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
+\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
+\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
+\/\/ \n\
+ \n\
+print(\"o\");\n\
+if(a != 3){\n\
+	print(\"p\");\n\
+}else{\n\
+	print(\"q\");\n\
+}\n\
+print(\"r\");\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
+			//window.exec({module:"code",command:"disable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("output_count1");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("equal");
+			HINT.hint("04_1");
+			HINT.hint("not_equal");
+			HINT.hint("if_else");
+			HINT.hint("double_quotation");
+			HINT.hint("print");
+
 			problems.next();
 		},
 		function(){
@@ -67,18 +81,6 @@ for(var i in a){\n\
 				},
 			});
 		},
-/*
-		function(){
-			var w = $("#hint")[0].contentWindow;
-			w.$("#label").instruct({
-				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
-				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
-			});
-		},
-*/
 		function(){
 			window.exec({module:"code",command:"setEvent",params:{
 				name:"beforeRun",

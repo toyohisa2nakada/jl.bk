@@ -18,43 +18,64 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 ある","出力 ","出力 ある","出力 "]);
+			plib.setExpectedOutputs([
+									"出力<br>ab<br>bc<br>ca",
+									"出力<br>~ab<br>~bc<br>ca",
+									"出力<br>ab<br>~bc<br>~ca",
+									"出力<br>~ab<br>bc<br>~ca",
+									"出力<br>~ab<br>bc<br>~ca",
+									"出力<br>ab<br>~bc<br>~ca",
+									"出力<br>~ab<br>~bc<br>ca",
+									"出力<br>ab<br>bc<br>ca"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:["1","-1","3","8"]},
+					{name:"a",initValue:["1","1","1","1","2","2","2","2"]},
+					{name:"b",initValue:["1","2","1","2","1","2","1","2"]},
+					{name:"c",initValue:["1","1","2","2","1","1","2","2"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:4,ch:5},{line:4,ch:9}],[{line:4,ch:13},{line:4,ch:17}]],
+				setEditable:[[{line:15,ch:0},{line:19,ch:0}]],
 				text:"\
-\/\/ それぞれの入力に対して正しく出力するプログラムを作成してください。\n\
+\/\/ すべての入力で正しく表示するプログラムを作成してください。\n\
 \/\/ \n\
-var a = [1,2,3,4,5,6,7];\n\
-for(var i in a){\n\
-	if(      ==      ){\n\
-		print(\"ある\");\n\
-	}\n\
-}\
+\/\/ 例えばここに示すプログラムは、\n\
+\/\/ if(...)の...の条件に一致するときにprint(\"ab\")を、\n\
+\/\/ 一致しないときにprint(\"~ab\")を実行します。\n\
+\/\/   if(...){\n\
+\/\/    print(\"ab\");\n\
+\/\/   }else{\n\
+\/\/    print(\"~ab\");\n\
+\/\/   }\n\
+\/\/ \n\
+\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
+\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
+\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
+\/\/ \n\
+\n\
+\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			plib.startOutputCheck();
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("b_i");
-			HINT.hint("equal");
+			HINT.hint("tilde");
+			HINT.hint("09_1");
+			HINT.hint("09_2");
+			HINT.hint("prev");
+			HINT.hint("input_check_ok");
+
+			plib.startOutputCheck();
 			problems.next();
 		},
 		function(){
@@ -62,8 +83,7 @@ for(var i in a){\n\
 			w.$(".CodeMirror").instruct({
 				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-				},
+				closedHandler:function(){},
 			});
 		},
 		function(){
@@ -78,6 +98,18 @@ for(var i in a){\n\
 				align:'center',
 				arrow:false,
 				font_size:'72px',
+				offsetX:$("body").width()/2,
+				offsetY:$("body").height()/2+200,
+				targetEventToClose:null,
+				closeButton:true,
+				closedHandler:function(){problems.next();},
+			});
+		},
+		function(){
+			$("body").instruct({
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
+				align:'center',
+				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,

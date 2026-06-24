@@ -18,76 +18,75 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 p","出力 q","出力 p"]);
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:plib.getExpectedOutputs(),
-				value:[
-					{name:"a",initValue:["1","3","3"]},
-					{name:"b",initValue:["3","3","1"]},
-					{name:"c",initValue:["0","0","0"]},
-				],
-			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:16,ch:3},{line:16,ch:13}]],
 				text:"\
-\/\/ 空欄にプログラムを追加し、すべての入力で正しく表示することを確認してください。\n\
+\/\/ 問題は、左の入力のところに表示されます。\n\
 \/\/ \n\
-\/\/ 例えばここに示すプログラムは、\n\
-\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
-\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
-\/\/   if(...){\n\
-\/\/    print(\"p\");\n\
-\/\/   }else{\n\
-\/\/    print(\"q\");\n\
-\/\/   }\n\
-\/\/ \n\
-\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
-\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
-\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
- \n\
- \n\
-if(          ){\n\
-	c = 1;\n\
-}else{\n\
-	c = 2;\n\
-}\n\
- \n\
-if(c == 1){\n\
-	print(\"p\");\n\
-}else{\n\
-	print(\"q\");\n\
+for(var i in a){\n\
+	print(a[i]);\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-			window.exec({module:"input",command:"setReadOnly"});
+//			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("08_1");
-			HINT.hint("08_2");
-			HINT.hint("prev");
-			HINT.hint("if_else");
-			HINT.hint("equal2");
-			HINT.hint("equal1");
-			HINT.hint("not_equal");
-			HINT.hint("code_check_error_zen");
-
-			plib.startOutputCheck();
+			HINT.hint("re_explain");
+			HINT.hint("string");
+			HINT.hint("for");
+			HINT.hint("a_i");
 			problems.next();
 		},
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"この指示に従ったプログラムを作成してください。",
+				string:"前の問題と、プログラムは変わっていません。もう一度、入力データをセットする練習をします。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+					problems.next();
+				},
 			});
+		},
+		function(){
+			var w = $("#hint")[0].contentWindow;
+			w.$("#label").instruct({
+				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+		function(){
+			plib.setExpectedOutputs(["出力<br>3<br>-1<br>p<br>5"]);
+			var instmsg = "3 -1 p 5と出力される入力データをセットしてください。pは、そのまま p とだけ書いても出力されません。pを何かの文字で囲みます。";
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				message:instmsg,
+				value:[
+					{name:"a",initValue:""},
+				],
+			}});
+			var w = $("#input")[0].contentWindow;
+			w.$("#input").instruct({
+				string:instmsg,
+				closeButton:true,
+			});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",
+				func:function(params,e){
+					var out = window.exec({module:"output",command:"outputs"});
+					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
+						problems.next();
+					}
+				}
+			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

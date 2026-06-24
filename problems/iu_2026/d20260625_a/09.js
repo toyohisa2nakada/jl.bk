@@ -18,67 +18,43 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 p","出力 q","出力 p"]);
+			plib.setExpectedOutputs(["出力 ある","出力 ","出力 ある","出力 "]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:["1","3","3"]},
-					{name:"b",initValue:["3","3","1"]},
-					{name:"c",initValue:["0","0","0"]},
+					{name:"c",initValue:["1","-1","3","8"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:16,ch:3},{line:16,ch:13}]],
+				setEditable:[[{line:4,ch:5},{line:4,ch:9}],[{line:4,ch:13},{line:4,ch:17}]],
 				text:"\
-\/\/ 空欄にプログラムを追加し、すべての入力で正しく表示することを確認してください。\n\
+\/\/ それぞれの入力に対して正しく出力するプログラムを作成してください。\n\
 \/\/ \n\
-\/\/ 例えばここに示すプログラムは、\n\
-\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
-\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
-\/\/   if(...){\n\
-\/\/    print(\"p\");\n\
-\/\/   }else{\n\
-\/\/    print(\"q\");\n\
-\/\/   }\n\
-\/\/ \n\
-\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
-\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
-\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
- \n\
- \n\
-if(          ){\n\
-	c = 1;\n\
-}else{\n\
-	c = 2;\n\
-}\n\
- \n\
-if(c == 1){\n\
-	print(\"p\");\n\
-}else{\n\
-	print(\"q\");\n\
+var a = [1,2,3,4,5,6,7];\n\
+for(var i in a){\n\
+	if(      ==      ){\n\
+		print(\"ある\");\n\
+	}\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("08_1");
-			HINT.hint("08_2");
-			HINT.hint("prev");
-			HINT.hint("if_else");
-			HINT.hint("equal2");
-			HINT.hint("equal1");
-			HINT.hint("not_equal");
-			HINT.hint("code_check_error_zen");
-
-			plib.startOutputCheck();
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("b_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
@@ -86,7 +62,8 @@ if(c == 1){\n\
 			w.$(".CodeMirror").instruct({
 				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+				},
 			});
 		},
 		function(){

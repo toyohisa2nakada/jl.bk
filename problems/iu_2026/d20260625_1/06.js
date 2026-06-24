@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,56 +18,81 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>p<br>5<br>0<br>p<br>7<br>4"]);
+			plib.setExpectedOutputs(["出力 p","出力 q","出力 q","出力 q","出力 q","出力 q","出力 q","出力 q"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:"[1,0,1,2]"},
-					{name:"b",initValue:"[5,6,7,8]"},
+					{name:"a",initValue:["1","2","3","4","5","6","7","8"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:16,ch:0},{line:18,ch:0}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ すべての入力で正しく表示するプログラムを作成してください。\n\
+\/\/ ただし、「== 」記号は使用できません。\n\
 \/\/ \n\
-for(var i in a){\n\
-	if(a[i]==1){\n\
-		print(\"p\");\n\
-		print(b[i]);\n\
-	}else{\n\
-		print(a[i]*2);\n\
-	}\n\
-}\
+\/\/ 例えばここに示すプログラムは、\n\
+\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
+\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
+\/\/   if(...){\n\
+\/\/    print(\"p\");\n\
+\/\/   }else{\n\
+\/\/    print(\"q\");\n\
+\/\/   }\n\
+\/\/ \n\
+\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
+\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
+\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
+\/\/ \n\
+\n\
+\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			window.exec({module:"code",command:"setReadOnly"});
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("output_count3");
-			HINT.hint("2line_print");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("b_i");
-			HINT.hint("equal");
+			HINT.hint("prev");
+			HINT.hint("if_else");
+			HINT.hint("not_equal");
+			HINT.hint("double_quotation");
+			HINT.hint("input_check_error");
+			HINT.hint("input_check");
+			HINT.hint("input_check_ok");
+
+			plib.startOutputCheck();
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"beforeRun",
+				func:function(params,e){
+					var str = window.exec({module:"code",command:"getEditableString"});
+					var ngstr = ["=="];
+
+					var found = [];
+					ngstr.forEach(function(elem){
+						if(-1 !== str.indexOf(elem)){
+							found.push(elem);
+						}
+					});
+					if(found.length!==0){
+						alert(found.join(" ")+" は使用できません。");
+						e.preventDefault = true;
+					}
+				}
+			}});
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
 				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
 					problems.next();
 				},
 			});
@@ -75,36 +100,10 @@ for(var i in a){\n\
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"プログラムは、print(\"p\");の行がコメントアウトが取れて、プログラムとして復活しています。<br>また、print(b[i]);が追加されています。この変数bは、入力のところで追加されています。<br>b[i]について分からない場合には、ヒントを見てください。",
+				string:"ただし、「== 」記号は使用できません。",
 				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
+				closeHandler:function(){}
 			});
-		},
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

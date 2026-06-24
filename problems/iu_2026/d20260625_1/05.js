@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,88 +18,67 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>0<br>4"]);
+			plib.setExpectedOutputs(["出力 p","出力 p","出力 q"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:"[1,0,1,2]"},
+					{name:"a",initValue:["1","2","3"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:16,ch:3},{line:16,ch:7}],[{line:16,ch:11},{line:16,ch:15}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ 空欄にプログラムを追加し、すべての入力で正しく表示することを確認してください。\n\
 \/\/ \n\
-for(var i in a){\n\
-	if(a[i]==1){\n\
-//		print(\"p\");\n\
-	}else{\n\
-		print(a[i]*2);\n\
-	}\n\
+\/\/ 例えばここに示すプログラムは、\n\
+\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
+\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
+\/\/   if(...){\n\
+\/\/    print(\"p\");\n\
+\/\/   }else{\n\
+\/\/    print(\"q\");\n\
+\/\/   }\n\
+\/\/ \n\
+\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
+\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
+\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
+ \n\
+ \n\
+if(     !=     ){\n\
+	print(\"p\");\n\
+}else{\n\
+	print(\"q\");\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			window.exec({module:"code",command:"setReadOnly"});
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("output_count2");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("equal");
+			HINT.hint("05_1");
+			HINT.hint("prev");
+			HINT.hint("input_check");
+			HINT.hint("input_check_ok");
+			HINT.hint("code_check_error_zen");
+			HINT.hint("input_check_error");
+			HINT.hint("print");
+
+			plib.startOutputCheck();
 			problems.next();
-		},
-		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
-				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
-			});
 		},
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"プログラムは、print(\"p\");の行がコメントアウトされています。<br>また、print(a[i])は、print(a[i] * 2)に変更されています。",
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
+				closedHandler:function(){},
 			});
-		},
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

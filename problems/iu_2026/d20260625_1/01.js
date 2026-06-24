@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,60 +18,57 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
+			plib.setExpectedOutputs(["出力<br>3<br>-1"]);
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				value:[
+					{name:"a",initValue:"-1"},
+				],
+			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 問題文は、左の入力のところにあります。\n\
+\/\/ 出力を予測してください。\n\
 \/\/ \n\
-for(var i in a){\n\
-	print(a[i]);\n\
-}\
+\/\/ print();は、()内のものを出します。\n\
+\/\/ 数字はそのまま出力されます。\n\
+\/\/ 英字からはじまるものは、変数といい、\n\
+\/\/ その変数に入っている数字が出力されます。\n\
+\/\/ \n\
+ \n\
+print(3);\n\
+print(a);\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-//			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
+			window.exec({module:"input",command:"setReadOnly"});
+			//window.exec({module:"code",command:"disable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("re_explain");
-			HINT.hint("a");
-			HINT.hint("a_i");
+			HINT.hint("print");
+			HINT.hint("output");
+			HINT.hint("01_1");
 
 			problems.next();
 		},
+/*
 		function(){
-			plib.setExpectedOutputs(["出力<br>1<br>2<br>3"]);
-			var instmsg = "[1,2,3] と半角で括弧[ ]を含めて入力し、実行してください。<br><br> 1つの変数に複数の数字を記録するには、[ ] で囲み、数字をカンマ(,)で区切ります。<br><br>成功すると次の指示が表示されます。";
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:instmsg,
-				value:[
-					{name:"a",initValue:""},
-				],
-			}});
 			var w = $("#input")[0].contentWindow;
 			w.$("#input").instruct({
-				string:instmsg,
+				string:"ここは、プログラムの入力データです。aという変数に5が代入されています。",
 				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
 			});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
-				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
-					}
-				}
-			}});
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#panel").instruct({
-				string:"1 2 3と表示されたことを確認してください。",
+			var w = $("#input")[0].contentWindow;
+			w.$("#input").instruct({
+				string:"この問題では、ここは変更することができません。",
 				closeButton:true,
 				closedHandler:function(){
 					problems.next();
@@ -81,41 +78,7 @@ for(var i in a){\n\
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"このプログラムの「for」は、繰り返し処理といって、変数aの中にある数字の個数分だけ、つまり3回、{ }の中の処理を繰り返します。{ }の中にprintが1つあるので、3個の数字が出力されています。",
-				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
-			});
-		},
-		function(){
-			["code","output"].forEach(function(elem){
-				window.exec({module:elem,command:"clearEvent"});
-			});
-			plib.setExpectedOutputs(["出力<br>3<br>5<br>6<br>8"]);
-			var instmsg = "次は[1,2,3]を消して、[3,5,6,8] と入力して実行してください。<br><br>成功すると、次の指示が表示されます。";
-			window.exec({module:"input",command:"setMessage",params:{
-				text:instmsg,
-			}});
-			var w = $("#input")[0].contentWindow;
-			w.$("#input").instruct({
-				string:instmsg,
-				closeButton:true,
-			});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
-				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
-					}
-				}
-			}});
-		},
-		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#panel").instruct({
-				string:"printが4回実行されて、4つの数字が出力されています。",
+				string:"ここには、プログラムがあります。",
 				closeButton:true,
 				closedHandler:function(){
 					problems.next();
@@ -125,7 +88,18 @@ for(var i in a){\n\
 		function(){
 			var w = $("#code")[0].contentWindow;
 			w.$(".CodeMirror").instruct({
-				string:"printの出力対象であるa[i]は、変数aのi番目の数字を表します。iは、0から順に、繰り返すたびに1つずつ数字が増えます。",
+				string:"この問題では、ここも変更することができません。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+*/
+		function(){
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"出力を予想してここに入力して下さい。",
 				closeButton:true,
 				closedHandler:function(){
 					problems.next();
@@ -133,27 +107,49 @@ for(var i in a){\n\
 			});
 		},
 		function(){
-			["code","output"].forEach(function(elem){
-				window.exec({module:elem,command:"clearEvent"});
-			});
-			plib.setExpectedOutputs(["出力<br>1<br>2<br>4<br>6<br>3"]);
-			var instmsg = "1 2 4 6 3と表示する入力データをセットしてください。";
-			window.exec({module:"input",command:"setMessage",params:{
-				text:instmsg,
-			}});
-			var w = $("#input")[0].contentWindow;
-			w.$("#input").instruct({
-				string:"それでは問題です。<br>"+instmsg,
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"複数の出力は、改行かスペースを間に入れてください。",
 				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
 			});
+		},
+		function(){
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"入力したら、実行ボタンを押してください。",
+				closeButton:true,
+				closedHandler:function(){
+					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
+					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
+				},
+			});
+		},
+		function(){
 			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
+				name:"beforeRun",
 				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
+					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
+					if(outs.length===0){
+						var w = $("#output")[0].contentWindow;
+						w.$("#inputPanel").instruct({
+							string:"出力される文字を入力してから、実行してください。",
+							closeButton:true,
+						});
+						e.preventDefault = true;
+					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
+						alert(errorMessages[(errorNo++)%errorMessages.length]);
+						e.preventDefault = true;
 					}
-				}
+				},
+			}});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",func:function(params,e){
+					problems.next();
+				},
 			}});
 		},
 		function(){

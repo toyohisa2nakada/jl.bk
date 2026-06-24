@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,76 +18,71 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 p","出力 q","出力 p"]);
+			plib.setExpectedOutputs(["出力<br>p<br>p<br>p<br>p"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
-				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:["1","3","3"]},
-					{name:"b",initValue:["3","3","1"]},
-					{name:"c",initValue:["0","0","0"]},
+					{name:"a",initValue:"[1,0,1,0]"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:16,ch:3},{line:16,ch:13}]],
 				text:"\
-\/\/ 空欄にプログラムを追加し、すべての入力で正しく表示することを確認してください。\n\
+\/\/ 出力を予測してください。\n\
 \/\/ \n\
-\/\/ 例えばここに示すプログラムは、\n\
-\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
-\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
-\/\/   if(...){\n\
-\/\/    print(\"p\");\n\
-\/\/   }else{\n\
-\/\/    print(\"q\");\n\
-\/\/   }\n\
-\/\/ \n\
-\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
-\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
-\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
- \n\
- \n\
-if(          ){\n\
-	c = 1;\n\
-}else{\n\
-	c = 2;\n\
-}\n\
- \n\
-if(c == 1){\n\
+for(var i in a){\n\
 	print(\"p\");\n\
-}else{\n\
-	print(\"q\");\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("08_1");
-			HINT.hint("08_2");
-			HINT.hint("prev");
-			HINT.hint("if_else");
-			HINT.hint("equal2");
-			HINT.hint("equal1");
-			HINT.hint("not_equal");
-			HINT.hint("code_check_error_zen");
-
-			plib.startOutputCheck();
+			HINT.hint("for");
+			HINT.hint("print");
 			problems.next();
 		},
 		function(){
-			var w = $("#code")[0].contentWindow;
-			w.$(".CodeMirror").instruct({
-				string:"この指示に従ったプログラムを作成してください。",
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
+					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
+				},
 			});
+		},
+		function(){
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"beforeRun",
+				func:function(params,e){
+					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
+					if(outs.length===0){
+						var w = $("#output")[0].contentWindow;
+						w.$("#inputPanel").instruct({
+							string:"出力される文字を入力してから、実行してください。",
+							closeButton:true,
+						});
+						e.preventDefault = true;
+					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
+						alert(errorMessages[(errorNo++)%errorMessages.length]);
+						e.preventDefault = true;
+					}
+				},
+			}});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",func:function(params,e){
+					problems.next();
+				},
+			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

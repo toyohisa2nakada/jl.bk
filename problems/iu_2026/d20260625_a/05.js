@@ -18,52 +18,41 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 q"]);
+			plib.setExpectedOutputs(["出力<br>0<br>4"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"a",initValue:"3"},
+					{name:"a",initValue:"[1,0,1,2]"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
-\/\/ 例えばここに示すプログラムは、\n\
-\/\/ if(...)の...の条件に一致するときにprint(\"p\")を実行し、\n\
-\/\/ 一致しないときにはprint(\"q\")を実行します。\n\
-\/\/   if(...){\n\
-\/\/    print(\"p\");\n\
-\/\/   }else{\n\
-\/\/    print(\"q\");\n\
-\/\/   }\n\
-\/\/ \n\
-\/\/ ==は、2つの数が同じ場合に条件に一致します。\n\
-\/\/ !=は、2つの数が違う場合に条件に一致します。\n\
-\/\/ aなどの変数名の場合には、その変数に入っている数が比較されます。\n\
-\/\/ \n\
- \n\
-if(a != 3){\n\
-	print(\"p\");\n\
-}else{\n\
-	print(\"q\");\n\
+for(var i in a){\n\
+	if(a[i]==1){\n\
+//		print(\"p\");\n\
+	}else{\n\
+		print(a[i]*2);\n\
+	}\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			//window.exec({module:"code",command:"disable"});
+			window.exec({module:"code",command:"enable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("not_equal");
-			HINT.hint("if_else");
-			HINT.hint("double_quotation");
-			HINT.hint("print");
-
+			HINT.hint("output_count2");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("a_i");
+			HINT.hint("equal");
 			problems.next();
 		},
 		function(){
@@ -74,6 +63,16 @@ if(a != 3){\n\
 				closedHandler:function(){
 					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
 					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
+				},
+			});
+		},
+		function(){
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"プログラムは、print(\"p\");の行がコメントアウトされています。<br>また、print(a[i])は、print(a[i] * 2)に変更されています。",
+				closeButton:true,
+				closedHandler:function(){
 					problems.next();
 				},
 			});

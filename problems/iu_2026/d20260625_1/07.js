@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,92 +18,69 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>p<br>q<br>z<br>s<br>z"]);
+			plib.setExpectedOutputs(["出力 q"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:"例 1",
 				value:[
-					{name:"a",initValue:"[0,1,2,3,4]"},
-					{name:"b",initValue:"[0,1,4,3,2]"},
-					{name:"c",initValue:"[\"p\",\"q\",\"r\",\"s\",\"t\"]"},
+					{name:"a",initValue:""},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ qと出力される入力をセットしてください。\n\
 \/\/ \n\
-for(var i in a){\n\
-	if(a[i]==b[i]){\n\
-		print(c[i]);\n\
-	}else{\n\
-		print(\"z\");\n\
-	}\n\
+\/\/ a == 1は、変数aの値が1のときに条件に一致します。\n\
+\/\/ a != 1は、変数aの値が1ではないときに条件に一致します。\n\
+\/\/ a = 1は、変数aに1を代入します。\n\
+\/\/ \n\
+\/\/ このvarは、ここで変数bを作成することを表します。\n\
+\/\/ また、bには1が代入されます。\n\
+var b = 1;\n\
+if(a != 2){\n\
+	b = 3;\n\
+}else{\n\
+	b = 4;\n\
+}\n\
+ \n\
+if(b != 4){\n\
+	print(\"p\");\n\
+}else{\n\
+	print(\"q\");\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-			window.exec({module:"input",command:"setReadOnly"});
+//			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("output_count4");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("a_i");
-			HINT.hint("b_i");
-			HINT.hint("equal");
+			HINT.hint("var");
+			HINT.hint("var_equal");
+			HINT.hint("if_else");
+			HINT.hint("not_equal");
+			HINT.hint("input_check_error_zen");
+
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#input")[0].contentWindow;
+			w.$("#input").instruct({
+				string:"プログラムの指示にある出力をする入力データをセットしてください。",
 				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
 			});
-		},
-		function(){
-			var w = $("#code")[0].contentWindow;
-			w.$(".CodeMirror").instruct({
-				string:"新しく変数cが追加され、プログラムも入力データも変更されています。",
-				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
-			});
-		},
-		function(){
 			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
+				name:"afterEnd",
 				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
+					var out = window.exec({module:"output",command:"outputs"});
+					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
+						problems.next();
 					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
+				}
 			}});
 		},
 		function(){
