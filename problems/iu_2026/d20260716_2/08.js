@@ -18,34 +18,24 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			var hout = plib.getExpectedOutputHeader();
-			var outstr = "3";
-			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
+			plib.setExpectedOutputs(["出力 13"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				value:[
-					{name:"c",initValue:"6"},
+					{name:"a",initValue:"[3,6,8,2,3]"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 出力を予測してください。\n\
 \/\/ \n\
-var a = [1,2,3,4,5];\n\
-var flag = 3;\n\
-for(var i in a){\n\
-	if(c == a[i]){\n\
-		flag = 1;\n\
-	}\n\
-}\n\
  \n\
-print(flag);\
+var n = a.length;\n\
+n += a[2];\n\
+print(n);\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
@@ -54,15 +44,10 @@ print(flag);\
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("print_flag");
-			HINT.hint("flag");
-			HINT.hint("equal1");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("no_else");
-			HINT.hint("a_i");
-			HINT.hint("equal");
-			HINT.hint("var");
+			HINT.hint("var_equal");
+			HINT.hint("plus_equal");
+			HINT.hint("8_1");
+
 			problems.next();
 		},
 		function(){
@@ -77,18 +62,6 @@ print(flag);\
 				},
 			});
 		},
-/*
-		function(){
-			var w = $("#hint")[0].contentWindow;
-			w.$("#label").instruct({
-				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
-				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
-			});
-		},
-*/
 		function(){
 			window.exec({module:"code",command:"setEvent",params:{
 				name:"beforeRun",

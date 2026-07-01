@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
+	var errorMessages = ["違います。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,66 +18,45 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs([
-				"出力<br>ある",
-				"出力<br>ない",
-				"出力<br>ない",
-				"出力<br>ある",
-			]);
+			plib.setExpectedOutputs(["出力 0","出力 0","出力 1","出力 0","出力 0"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:["1","2","8","9"]},
+					{name:"a",initValue:["4","0","5","5","2"]},
+					{name:"b",initValue:["4","1","5","3","5"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}]],
+				setEditable:[[{line:3,ch:3},{line:3,ch:9}]],
 				text:"\
-\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
-\/\/ プログラムを追加する箇所は、「2か所」です。\n\
-\/\/ \n\
-var a = [1,3,5,7,9];\n\
-var flag = 0;\n\
+\/\/ aとbの値が同じであり、かつ、aの値が5のときに1と出力し、\n\
+\/\/ それ以外は0と出力するようにしてください。\n\
  \n\
-for(var i in a){\n\
-	\/\/ ↓プログラムの追加箇所（１）\n\
-	if(              ){\n\
-	 \/\/ ↓プログラムの追加箇所（２）\n\
-		               ;\n\
-	}\n\
-}\n\
- \n\
-if(flag == 1){\n\
-	print(\"ある\");\n\
+if(      ){\n\
+	print(\"1\");\n\
 }else{\n\
-	print(\"ない\");\n\
+	print(\"0\");\n\
 }\n\
+\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			plib.startOutputCheck();
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("3_1");
-			HINT.hint("3_2");
-			HINT.hint("flag");
-			HINT.hint("equal1");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("no_else");
-			HINT.hint("a_i");
-			HINT.hint("equal");
-			HINT.hint("var");
+			HINT.hint("equal2");
+			HINT.hint("if_else");
+			HINT.hint("and");
+			HINT.hint("or");
 
+			plib.startOutputCheck();
 			problems.next();
 		},
 		function(){
@@ -85,7 +64,16 @@ if(flag == 1){\n\
 			w.$(".CodeMirror").instruct({
 				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){problems.next();},
+			});
+		},
+		function(){
+			var w = $("#input")[0].contentWindow;
+			w.$("#datasetPanel").instruct({
+				string:"また、ここに複数の入力データセットがあります。クリックしてデータセットを変更し、すべてのデータで正しく出力されることを確認して下さい。",
+				closeButton:true,
+				closedHandler:function(){
+				},
 			});
 		},
 		function(){

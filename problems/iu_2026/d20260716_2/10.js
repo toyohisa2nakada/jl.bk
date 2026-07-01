@@ -18,65 +18,50 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>5<br>a<br>c<br>4<br>7<br>b"]);
+			plib.setExpectedOutputs(["出力<br>平均 3.5<br>分散 1.25","出力<br>平均 3.25<br>分散 10.6875","出力<br>平均 5<br>分散 15.2"]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
-				message:"例 [1,2,3]",
+				message:plib.getExpectedOutputs(),
 				value:[
-					//{name:"a",initValue:"",inputCheck:"nouse",inputCheckParams:["a","b","c"]},
-					//{name:"a",initValue:"",inputCheck:"array"},
-					{name:"a",initValue:"",inputCheck:["nouse","array"],inputCheckParams:[["a","b","c"],undefined]},
+					{name:"a",initValue:["[2,3,4,5]","[4,-1,2,8]","[4,9,5,-3,9,10,1,4,3,8]"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:3,ch:0},{line:6,ch:0}]],
 				text:"\
-\/\/ 5 a c 4 7 bと出力される入力をセットしてください。\n\
-\/\/ \n\
- \n\
-for(var c in a){\n\
-	if(a[c] == 1){\n\
-		print(\"a\");\n\
-	}else if(a[c] == 2){\n\
-		print(\"b\");\n\
-	}else if(a[c] == 3){\n\
-		print(\"c\");\n\
-	}else{\n\
-		print(a[c]);\n\
-	}\n\
-}\n\
+\/\/ 変数aの値の平均と分散を求めてください。\n\
+\/\/ print(\"平均 \"+u);とすると、平均という文字の後ろにuの値を出力します。\n\
+\/\/ Math.pow(p,2)は、pの2乗を計算します。\n\
+\n\
+\n\
+\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-//			window.exec({module:"input",command:"setReadOnly"});
+			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-			window.exec({module:"code",command:"setReadOnly"});
+//			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("var");
+			HINT.hint("var_equal");
+			HINT.hint("plus_equal");
+			HINT.hint("divide_equal");
 			HINT.hint("for");
-			HINT.hint("7_1");
+			HINT.hint("10_variance");
 
+			plib.startOutputCheck();
 			problems.next();
 		},
 		function(){
-			var w = $("#input")[0].contentWindow;
-			w.$("#input").instruct({
-				string:"5 a c 4 7 bと表示する入力をセットしてください。但し、a,b,cの文字は使用できません。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
+				closedHandler:function(){},
 			});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
-				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
-					}
-				}
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");
@@ -90,6 +75,18 @@ for(var c in a){\n\
 				align:'center',
 				arrow:false,
 				font_size:'72px',
+				offsetX:$("body").width()/2,
+				offsetY:$("body").height()/2+200,
+				targetEventToClose:null,
+				closeButton:true,
+				closedHandler:function(){problems.next();},
+			});
+		},
+		function(){
+			$("body").instruct({
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
+				align:'center',
+				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,

@@ -1,10 +1,11 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
 		function(){
+//console.log("scriptName=\""+scriptName+"\"");
 			plib.log.add(scriptName+":startProblem");
 			window.exec({module:"main",command:"updateStatus",params:{scriptName:scriptName}});
 
@@ -18,74 +19,74 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
+			plib.setExpectedOutputs(["出力<br>0<br>1<br>2"]);
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				value:[
+					{name:"a",initValue:"[1,5,8]"},
+				],
+			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 問題は、左の入力のところに表示されます。\n\
+\/\/ 出力を予測してください。\n\
 \/\/ \n\
-var a = [1,2,3,4,5];\n\
-var c = 8;\n\
-for(var i in a){\n\
-	if(c == a[i]){\n\
-		flag = 1;\n\
-	}\n\
-}\n\
  \n\
-if(flag == 2){\n\
-	print(\"ない\");\n\
-}else{\n\
-	print(\"ある\");\n\
-}\
+for(var c in a){\n\
+	print(c);\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-//			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
+			window.exec({module:"input",command:"setReadOnly"});
+			window.exec({module:"code",command:"disable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("flag");
-			HINT.hint("equal1");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("no_else");
-			HINT.hint("a_i");
-			HINT.hint("equal");
 			HINT.hint("var");
+			HINT.hint("for");
+			HINT.hint("5_for");
+			HINT.hint("6_for");
 
-			var hout = plib.getExpectedOutputHeader();
-			var outstr = "ない";
-			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
-			var instmsg = outstr+" と出力される入力データをセットしてください。<br>入力例：8";
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:instmsg,
-				value:[
-					{name:"flag",initValue:""},
-				],
-			}});
-			var w = $("#input")[0].contentWindow;
-			w.$("#input").instruct({
-				string:instmsg,
+			problems.next();
+		},
+		function(){
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
 				closedHandler:function(){
+					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
+					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
 				},
 			});
+		},
+		function(){
 			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
+				name:"beforeRun",
 				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
+					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
+					if(outs.length===0){
+						var w = $("#output")[0].contentWindow;
+						w.$("#inputPanel").instruct({
+							string:"出力される文字を入力してから、実行してください。",
+							closeButton:true,
+						});
+						e.preventDefault = true;
+					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
+						alert(errorMessages[(errorNo++)%errorMessages.length]);
+						e.preventDefault = true;
 					}
-				}
+				},
 			}});
-
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",func:function(params,e){
+					problems.next();
+				},
+			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

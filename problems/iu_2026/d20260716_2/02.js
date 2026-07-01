@@ -18,29 +18,31 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
+			plib.setExpectedOutputs(["出力<br>2<br>3"]);
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				message:"例 1",
+				value:[
+					{name:"a",initValue:""},
+					{name:"b",initValue:""},
+				],
+			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 問題は、左の入力のところに表示されます。\n\
+\/\/ 2 3と出力される入力をセットしてください。\n\
 \/\/ \n\
-var a = [1,2,3,4,5];\n\
-var flag = 0;\n\
-for(var i in a){\n\
-	if(c == a[i]){\n\
-		flag = 1;\n\
-	}\n\
-}\n\
  \n\
-if(flag == 1){\n\
-	print(\"ある\");\n\
-}else{\n\
-	print(\"ない\");\n\
-}\
+if(a == 1){\n\
+	print(\"1\");\n\
+}else if(b == 2){\n\
+	print(\"2\");\n\
+}\n\
+if(a == 3){\n\
+	print(\"3\");\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
@@ -49,32 +51,17 @@ if(flag == 1){\n\
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("flag");
-			HINT.hint("equal1");
-			HINT.hint("for");
-			HINT.hint("if");
-			HINT.hint("no_else");
-			HINT.hint("a_i");
-			HINT.hint("equal");
-			HINT.hint("var");
+			HINT.hint("equal2");
+			HINT.hint("if_elseif");
+			HINT.hint("if_if");
 
-			var hout = plib.getExpectedOutputHeader();
-			var outstr = "ない";
-			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
-			var instmsg = outstr+" と出力される入力をセットしてください。<br>入力例：2";
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:instmsg,
-				value:[
-					{name:"c",initValue:""},
-				],
-			}});
+			problems.next();
+		},
+		function(){
 			var w = $("#input")[0].contentWindow;
 			w.$("#input").instruct({
-				string:instmsg,
+				string:"2 3と表示する入力をセットしてください。",
 				closeButton:true,
-				closedHandler:function(){
-				},
 			});
 			window.exec({module:"code",command:"setEvent",params:{
 				name:"afterEnd",
@@ -85,7 +72,6 @@ if(flag == 1){\n\
 					}
 				}
 			}});
-
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");
