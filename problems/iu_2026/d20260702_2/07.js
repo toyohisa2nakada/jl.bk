@@ -34,10 +34,11 @@ new function(){
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:3,ch:3},{line:3,ch:19}],[{line:5,ch:9},{line:5,ch:25}]],
+				setEditable:[[{line:4,ch:3},{line:4,ch:19}],[{line:6,ch:9},{line:6,ch:25}]],
 				text:"\
 \/\/ 変数a, b, cの中で中間値を出力してください。\n\
 \/\/ 例えば変数aの中身を表示する場合には、print(a); を使用します。\n\
+\/\/ && は「かつ」、|| は「または」を表します。\n\
  \n\
 if(                ){\n\
 	print(a);\n\

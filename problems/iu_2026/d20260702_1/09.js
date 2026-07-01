@@ -20,16 +20,16 @@ new function(){
 
 			var hout = plib.getExpectedOutputHeader();
 			plib.setExpectedOutputs([
-				hout+"<br>Switch<br>PS4 Pro<br>Xbox S<br>PS Vita<br>PSVR カメラ同梱<br>Wii U",
-				hout+"<br>Switch<br>PS4 Pro<br>Xbox S<br>PSVR カメラ同梱",
-				hout+"<br>PS4 Pro<br>PSVR カメラ同梱",
-				hout+"<br>PSVR カメラ同梱",
+				hout+"<br>Switch2<br>PS5<br>PS5 DE<br>Xbox X<br>Steam Deck<br>ファミコン(当時)",
+				hout+"<br>Switch2<br>PS5 DE<br>Xbox X<br>ファミコン(当時)",
+				hout+"<br>Switch2<br>ファミコン(当時)",
+				hout+"ファミコン(当時)",
 			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:["20000","30000","40000","50000"]},
+					{name:"c",initValue:["140000","90000","60000","20000"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
@@ -42,8 +42,8 @@ new function(){
 \/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
 \/\/ プログラムを追加する箇所は、「3か所」です。\n\
 \/\/ \n\
-var items = [\"Switch\",\"PS4 Pro\",\"Xbox S\",\"PS Vita\",\"PSVR カメラ同梱\",\"Wii U\"];\n\
-var costs = [32378    ,48578    ,37778   ,20498    ,53978            ,27000];\n\
+var items = [\"Switch2\",\"PS5\", \"PS5 DE\",\"Xbox X\",\"Steam Deck\",\"ファミコン(当時)\"];\n\
+var costs = [59980    ,97980, 89980   ,87980   ,137980      ,14800];\n\
 \/\/           ↓プログラムの追加箇所（１）\n\
 for(var i in          ){\n\
 	\/\/ ↓プログラムの追加箇所（２）\n\

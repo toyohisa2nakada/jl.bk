@@ -18,57 +18,43 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs([
-				"出力<br>ある",
-				"出力<br>ある",
-				"出力<br>ない",
-				"出力<br>ない",
-			]);
+			var hout = plib.getExpectedOutputHeader();
+			var outstr = "3";
+			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
-				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:["1","2","8","9"]},
+					{name:"c",initValue:"6"},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}]],
 				text:"\
-\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
-\/\/ プログラムを追加する箇所は、「2か所」です。\n\
+\/\/ 出力を予測してください。\n\
 \/\/ \n\
-var a = [3,4,5,6,7];\n\
-var flag = 0;\n\
- \n\
+var a = [1,2,3,4,5];\n\
+var flag = 3;\n\
 for(var i in a){\n\
-	\/\/ ↓プログラムの追加箇所（１）\n\
-	if(              ){\n\
-	 \/\/ ↓プログラムの追加箇所（２）\n\
-		               ;\n\
+	if(c == a[i]){\n\
+		flag = 1;\n\
 	}\n\
 }\n\
  \n\
-if(flag == 2){\n\
-	print(\"ある\");\n\
-}else{\n\
-	print(\"ない\");\n\
-}\n\
+print(flag);\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
-			plib.startOutputCheck();
+			window.exec({module:"code",command:"disable"});
+			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("8_1");
-			HINT.hint("8_2");
+			HINT.hint("print_flag");
 			HINT.hint("flag");
 			HINT.hint("equal1");
 			HINT.hint("for");
@@ -76,18 +62,56 @@ if(flag == 2){\n\
 			HINT.hint("no_else");
 			HINT.hint("a_i");
 			HINT.hint("equal");
-			HINT.hint("lessthan");
 			HINT.hint("var");
-
 			problems.next();
 		},
 		function(){
-			var w = $("#code")[0].contentWindow;
-			w.$(".CodeMirror").instruct({
-				string:"この指示に従ったプログラムを作成してください。",
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
+					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
+				},
 			});
+		},
+/*
+		function(){
+			var w = $("#hint")[0].contentWindow;
+			w.$("#label").instruct({
+				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+*/
+		function(){
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"beforeRun",
+				func:function(params,e){
+					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
+					if(outs.length===0){
+						var w = $("#output")[0].contentWindow;
+						w.$("#inputPanel").instruct({
+							string:"出力される文字を入力してから、実行してください。",
+							closeButton:true,
+						});
+						e.preventDefault = true;
+					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
+						alert(errorMessages[(errorNo++)%errorMessages.length]);
+						e.preventDefault = true;
+					}
+				},
+			}});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",func:function(params,e){
+					problems.next();
+				},
+			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

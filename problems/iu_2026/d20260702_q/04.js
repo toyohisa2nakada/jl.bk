@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,17 +18,26 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
+			var hout = plib.getExpectedOutputHeader();
+			var outstr = "い";
+			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				value:[
+					{name:"c",initValue:"8"},
+				],
+			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
-\/\/ 問題は、左の入力のところに表示されます。\n\
+\/\/ 出力を予測してください。\n\
 \/\/ \n\
-var c = 2;\n\
+var a = [1,2,3,4,5];\n\
 var flag = 0;\n\
 for(var i in a){\n\
 	if(c == a[i]){\n\
@@ -36,16 +45,16 @@ for(var i in a){\n\
 	}\n\
 }\n\
  \n\
-if(flag == 0){\n\
-	print(\"ない\");\n\
+if(flag == 1){\n\
+	print(\"あ\");\n\
 }else{\n\
-	print(\"ある\");\n\
+	print(\"い\");\n\
 }\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-//			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"enable"});
+			window.exec({module:"input",command:"setReadOnly"});
+			window.exec({module:"code",command:"disable"});
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
@@ -56,36 +65,55 @@ if(flag == 0){\n\
 			HINT.hint("no_else");
 			HINT.hint("a_i");
 			HINT.hint("equal");
-			HINT.hint("var");
-
-			var hout = plib.getExpectedOutputHeader();
-			var outstr = "ない";
-			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
-			var instmsg = outstr+" と出力される入力データをセットしてください。ただし変数aは配列として、要素数(数字の数)を5個としてください。<br>入力例：[1,2,3,4,5]";
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:instmsg,
-				value:[
-					{name:"a",initValue:"",inputCheck:"array",inputCheckParams:5},
-				],
-			}});
-			var w = $("#input")[0].contentWindow;
-			w.$("#input").instruct({
-				string:instmsg,
+			problems.next();
+		},
+		function(){
+			var w = $("#output")[0].contentWindow;
+			w.$("#inputPanel").instruct({
+				string:"出力される文字を入力して、実行してください。",
 				closeButton:true,
 				closedHandler:function(){
+					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
+					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
+					problems.next();
 				},
 			});
+		},
+/*
+		function(){
+			var w = $("#hint")[0].contentWindow;
+			w.$("#label").instruct({
+				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
+				closeButton:true,
+				closedHandler:function(){
+					problems.next();
+				},
+			});
+		},
+*/
+		function(){
 			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",
+				name:"beforeRun",
 				func:function(params,e){
-					var out = window.exec({module:"output",command:"outputs"});
-					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
-						problems.next();
+					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
+					if(outs.length===0){
+						var w = $("#output")[0].contentWindow;
+						w.$("#inputPanel").instruct({
+							string:"出力される文字を入力してから、実行してください。",
+							closeButton:true,
+						});
+						e.preventDefault = true;
+					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
+						alert(errorMessages[(errorNo++)%errorMessages.length]);
+						e.preventDefault = true;
 					}
-				}
+				},
 			}});
-
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",func:function(params,e){
+					problems.next();
+				},
+			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

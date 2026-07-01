@@ -18,104 +18,84 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			var hout = plib.getExpectedOutputHeader();
-			var outstr = "ある";
-			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
+			plib.setExpectedOutputs([
+				"出力<br>東京にある",
+				"出力<br>東京にはない",
+				"出力<br>東京にある",
+				"出力<br>東京にはない",
+				"出力<br>東京にはない",
+			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:"6"},
-					{name:"flag",initValue:"0"},
+					{name:"c",initValue:["\"マクドナルド\"","\"ラッキーピエロ\"","\"ガスト\"","\"A&W\"","\"セイコーマート\""]},
 				],
 			}});
-			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"items"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"watch",command:"addValue",params:{name:"isin"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:12,ch:13},{line:12,ch:22}],[{line:14,ch:4},{line:14,ch:18}],[{line:16,ch:2},{line:16,ch:16}],[{line:20,ch:11},{line:20,ch:15}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
+\/\/ プログラムを追加する箇所は、「4か所」です。\n\
 \/\/ \n\
-var a = [4,3,7,2,1];\n\
-for(var i in a){\n\
-	if(c < a[i]){\n\
-		flag = 1;\n\
+var items = [\"マクドナルド\",\n\
+			 \"ガスト\",\n\
+			 \"セブンイレブン\",\n\
+			 \"丸亀製麺\",\n\
+			 \"モスバーガー\",\n\
+			 \"ミスタードーナツ\"];\n\
+var isin = 0;\n\
+ \n\
+\/\/           ↓プログラムの追加箇所（１）\n\
+for(var i in          ){\n\
+	\/\/ ↓プログラムの追加箇所（２）\n\
+	if(              ){\n\
+	 \/\/ ↓プログラムの追加箇所（３）\n\
+		               ;\n\
 	}\n\
 }\n\
- \n\
-if(flag == 1){\n\
-	print(\"ある\");\n\
+\/\/       ↓プログラムの追加箇所（４）\n\
+if(isin ==     ){\n\
+	print(\"東京にある\");\n\
 }else{\n\
-	print(\"ない\");\n\
-}\
+	print(\"東京にはない\");\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"disable"});
-			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"enable"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("flag");
+			HINT.hint("7_1");
+			HINT.hint("7_2");
+			HINT.hint("7_3");
+			HINT.hint("7_4");
+			HINT.hint("isin");
+			HINT.hint("double_quotation");
 			HINT.hint("equal1");
 			HINT.hint("for");
 			HINT.hint("if");
 			HINT.hint("no_else");
 			HINT.hint("a_i");
 			HINT.hint("equal");
-			HINT.hint("lessthan");
 			HINT.hint("var");
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
+				closedHandler:function(){},
 			});
-		},
-/*
-		function(){
-			var w = $("#hint")[0].contentWindow;
-			w.$("#label").instruct({
-				string:"ここにヒントがあります。それぞれのボタンを押すと、表示されます。<br><br>分からなくて困ったときには、利用してください。",
-				closeButton:true,
-				closedHandler:function(){
-					problems.next();
-				},
-			});
-		},
-*/
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

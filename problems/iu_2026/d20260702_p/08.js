@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,37 +18,67 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 3","出力 7","出力 -4"]);
+			plib.setExpectedOutputs([
+				"出力<br>ある",
+				"出力<br>ある",
+				"出力<br>ない",
+				"出力<br>ない",
+			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"p",initValue:["1","-1","-1"]},
-					{name:"q",initValue:["2","8" ,"-3"]},
+					{name:"c",initValue:["1","2","8","9"]},
 				],
 			}});
-			window.exec({module:"watch",command:"addValue",params:{name:"p"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"q"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:2,ch:0},{line:4,ch:0}]],
+				setEditable:[[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}]],
 				text:"\
-\/\/ 正しく出力するプログラムを作成してください。 \n\
-\/\/ 例えば変数aの中身を表示する場合には、print(a); を使用します。\n\
-\n\
-\n\
-\
+\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
+\/\/ プログラムを追加する箇所は、「2か所」です。\n\
+\/\/ \n\
+var a = [3,4,5,6,7];\n\
+var flag = 0;\n\
+ \n\
+for(var i in a){\n\
+	\/\/ ↓プログラムの追加箇所（１）\n\
+	if(              ){\n\
+	 \/\/ ↓プログラムの追加箇所（２）\n\
+		               ;\n\
+	}\n\
+}\n\
+ \n\
+if(flag == 2){\n\
+	print(\"ある\");\n\
+}else{\n\
+	print(\"ない\");\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
+			HINT.hint("8_1");
+			HINT.hint("8_2");
+			HINT.hint("flag");
+			HINT.hint("equal1");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("no_else");
+			HINT.hint("a_i");
+			HINT.hint("equal");
+			HINT.hint("lessthan");
+			HINT.hint("var");
 
-			plib.startOutputCheck();
 			problems.next();
 		},
 		function(){

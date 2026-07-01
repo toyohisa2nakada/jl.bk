@@ -1,6 +1,6 @@
 new function(){
 	var scriptName = plib.getScriptName();
-	var errorMessages = ["違います。"];
+	var errorMessages = ["違います。","違いますよ","違うんですってば","もう一回お願いします。"];
 	var errorNo = 0;
 
 	var self_n = problems.problems.push([
@@ -18,40 +18,69 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 12","出力 4","出力 32","出力 2","出力 15","出力 9","出力 36","出力 4"]);
+			plib.setExpectedOutputs([
+				"出力<br>ネコではない",
+				"出力<br>ネコである",
+				"出力<br>ネコではない",
+				"出力<br>ネコである",
+				"出力<br>ネコではない",
+			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"op",initValue:["1","2","3","4","1","2","3","4"]},
-					{name:"p" ,initValue:["8","8","8","8","12","12","12","12"]},
-					{name:"q" ,initValue:["4","4","4","4","3" ,"3" ,"3" ,"3"]},
+					{name:"c",initValue:["\"イヌ\"","\"マンチカン\"","\"キティちゃん\"","\"ニャンコ先生\"","\"夏目漱石\""]},
 				],
 			}});
-			window.exec({module:"watch",command:"addValue",params:{name:"p"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"q"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"cats"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:3,ch:0},{line:5,ch:0}]],
+				setEditable:[[{line:6,ch:13},{line:6,ch:22}],[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}],[{line:14,ch:11},{line:14,ch:15}]],
 				text:"\
-\/\/ 正しく出力するプログラムを作成してください。 \n\
-\/\/ 例えば変数aの中身を表示する場合には、print(a); を使用します。\n\
-\/\/ ヒント：opは演算子(+,-,*,/)のどれかを表します。 \n\
-\n\
-\n\
-\
+\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
+\/\/ プログラムを追加する箇所は、「4か所」です。\n\
+\/\/ \n\
+var cats = [\"ミケネコ\",\"アメショ\",\"マンチカン\",\"ドラえもん\",\"ニャンコ先生\"];\n\
+var flag = 0;\n\
+\/\/           ↓プログラムの追加箇所（１）\n\
+for(var i in          ){\n\
+	\/\/ ↓プログラムの追加箇所（２）\n\
+	if(              ){\n\
+	 \/\/ ↓プログラムの追加箇所（３）\n\
+		               ;\n\
+	}\n\
+}\n\
+\/\/        ↓プログラムの追加箇所（４）\n\
+if(flag ==     ){\n\
+	print(\"ネコである\");\n\
+}else{\n\
+	print(\"ネコではない\");\n\
+}\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
 			HINT.hint("9_1");
-
-			plib.startOutputCheck();
+			HINT.hint("9_2");
+			HINT.hint("9_3");
+			HINT.hint("9_4");
+			HINT.hint("flag");
+			HINT.hint("double_quotation");
+			HINT.hint("equal1");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("no_else");
+			HINT.hint("a_i");
+			HINT.hint("equal");
+			HINT.hint("var");
 			problems.next();
 		},
 		function(){
@@ -74,6 +103,18 @@ new function(){
 				align:'center',
 				arrow:false,
 				font_size:'72px',
+				offsetX:$("body").width()/2,
+				offsetY:$("body").height()/2+200,
+				targetEventToClose:null,
+				closeButton:true,
+				closedHandler:function(){problems.next();},
+			});
+		},
+		function(){
+			$("body").instruct({
+				string:"これで終わりです。自動で課題が提出されますので「了解」ボタンを押してください。",
+				align:'center',
+				arrow:false,
 				offsetX:$("body").width()/2,
 				offsetY:$("body").height()/2+200,
 				targetEventToClose:null,

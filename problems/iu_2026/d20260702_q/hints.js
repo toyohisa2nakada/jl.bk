@@ -25,7 +25,7 @@ var HINT = (new function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"変数cと、変数catsの比較をする条件式を記述します。変数catsは配列変数なので1つのデータである変数であるcと比較するために[ ]を付けなければいけないです。また、文字データが同じかどうかを比較する方法は、数値の比較と同じように==を使用します。=の1つの場合は、比較ではなく代入になるので、注意してください。",
+						string:"変数cと、変数lecturesの比較をする条件式を記述します。変数lecturesは配列変数なので1つのデータである変数であるcと比較するために[ ]を付けなければいけないです。また、文字データが同じかどうかを比較する方法は、数値の比較と同じように==を使用します。=の1つの場合は、比較ではなく代入になるので、注意してください。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -40,7 +40,7 @@ var HINT = (new function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"変数flagに値をセットします。変数に値をセットするには、flag=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
+						string:"変数mustに値をセットします。変数に値をセットするには、must=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -63,14 +63,17 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"8_1":function(key){
+
+
+
+		"7_1":function(key){
 			window.exec({module:"hint",command:"add",params:{
 				name:"追加箇所(1)？",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"変数cと、変数aの比較をする条件式を記述します。変数aは配列変数なので数値1つの変数であるcと比較するために[ ]を付けなければいけないことに注意してください。また、数値の大小を比較する方法は、p < qとします。pがqよりも小さいときに条件に一致します。",
+						string:"配列変数を指定します。ここでは、配列変数を複数の数字が1つになったという配列のままで指定するので、例えばa[i]のように[i]を書く必要はありません。for文は、ここに指定された配列の中の数字の個数だけ、{ }の中の処理を繰り返します。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -78,14 +81,14 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"8_2":function(key){
+		"7_2":function(key){
 			window.exec({module:"hint",command:"add",params:{
 				name:"追加箇所(2)？",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
-						string:"変数flagに値をセットします。変数に値をセットするには、flag=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
+						string:"変数cと、変数itemsの比較をする条件式を記述します。変数itemsは配列変数なので1つのデータである変数であるcと比較するために[ ]を付けなければいけないです。また、文字データが同じかどうかを比較する方法は、数値の比較と同じように==を使用します。=の1つの場合は、比較ではなく代入になるので、注意してください。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -93,7 +96,40 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"6_1":function(key){
+		"7_3":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"追加箇所(3)？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"変数isinに値をセットします。変数に値をセットするには、isin=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"7_4":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"追加箇所(4)？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"数字を1つ記述します。どの数字にするかは、プログラムの追加箇所(3)と関係しています。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+
+
+
+		"5_1":function(key){
 			window.exec({module:"hint",command:"add",params:{
 				name:"追加箇所(1)？",
 				onclick:function(){
@@ -108,7 +144,7 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"6_2":function(key){
+		"5_2":function(key){
 			window.exec({module:"hint",command:"add",params:{
 				name:"追加箇所(2)？",
 				onclick:function(){
@@ -116,6 +152,111 @@ var HINT = (new function(){
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
 						string:"変数flagに値をセットします。変数に値をセットするには、flag=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"3_1":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"追加箇所(1)？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"変数cと、変数aの比較をする条件式を記述します。変数aは配列変数なので数値1つの変数であるcと比較するために[ ]を付けなければいけないことに注意してください。また、数値が同じかどうかを比較する方法は、==とする必要があります。=の1つの場合は、比較ではなく代入になります。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"3_2":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"追加箇所(2)？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"変数flagに値をセットします。変数に値をセットするには、flag=xxとします。xxは数字です。ここでセットした値は、プログラムの最後のif文で比較することを考慮して、どの数値にするのかを考えてみてください。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"print_flag":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"print(flag)とは？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"print(flag)は、flag変数の中の数値を出力します。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"must":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"mustとは？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"mustは変数です。プログラムの中でのこのmust変数の役割は、これまでの問題のflag変数と同じです。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"isin":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"isinとは？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"isinは変数です。プログラムの中でのこのisin変数の役割は、これまでの問題のflag変数と同じです。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"abs_comp":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"abs,compとは？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#input")[0].contentWindow;
+					w.$("#input").instruct({
+						string:"変数です。abs, compという名前には意味はありません。absという名前の箱を用意して、そこにこのプログラムの場合は、欠席回数を保存して、プログラムの中で扱っています。",
+						closeButton:true,
+						closedHandler:function(){
+						},
+					});
+				},
+			}});
+		},
+		"Math.round":function(key){
+			window.exec({module:"hint",command:"add",params:{
+				name:"Math.roundとは？",
+				onclick:function(){
+					plib.log.add(self.scriptName+":hint:"+key);
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
+						string:"例えばMath.round(5.4)とすると、小数点以下を四捨五入して、5が計算されます。計算された数字は、このプログラムの場合は、変数scoreに代入されます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -140,12 +281,12 @@ var HINT = (new function(){
 		},
 		"double_quotation":function(key){
 			window.exec({module:"hint",command:"add",params:{
-				name:"\"イヌ\"とは？",
+				name:"\" \"とは？",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
 					var w = $("#input")[0].contentWindow;
 					w.$("#input").instruct({
-						string:"\" は、ダブルクオーテーションと呼びます。\"イヌ\"は、文字の「イヌ」という意味です。ダブルクオーテーションなしの「イヌ」とプログラム中に書くと変数の「イヌ」を表すことになります。print(\"イヌ\")は「イヌ」が出力され、print(イヌ)は変数「イヌ」の中身が表示されます。",
+						string:"\" は、ダブルクオーテーションと呼びます。例えば\"a\"は、文字の「a」という意味です。ダブルクオーテーションなしの「a」とプログラム中に書くと変数の「a」を表すことになります。print(\"a\")は「a」が出力され、print(a)は変数「a」の中身が表示されます。",
 						closeButton:true,
 						closedHandler:function(){
 						},
@@ -158,8 +299,8 @@ var HINT = (new function(){
 				name:"flagとは？",
 				onclick:function(){
 					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#input")[0].contentWindow;
-					w.$("#input").instruct({
+					var w = $("#code")[0].contentWindow;
+					w.$(".CodeMirror").instruct({
 						string:"flagは変数です。プログラムの開始時に、入力欄またはプログラムの最初の方で値がセットされます。そのあとでプログラムの中では、if(c==a[i])に一致したときに、flag=xxのプログラムによってxxの数字に上書きされます。そして最後にif(flag==xx)において、flagの中がxxの場合にはifのあとの{ }の中が実行され、そうではない場合にはelseのあとの{ }の中が実行されます。",
 						closeButton:true,
 						closedHandler:function(){
@@ -228,21 +369,6 @@ var HINT = (new function(){
 				},
 			}});
 		},
-		"b_i":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"b[i]とは?",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"b[i]は、変数bのi番目の数値を表します。forは、変数aの数値の個数だけ{ }の中を実行し、その繰り返し中の1回目のb[i]は、bの1つ目の数字、2回目には、bの2つ目の数字を表すことになります。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
 		"equal1":function(key){
 			window.exec({module:"hint",command:"add",params:{
 				name:"= とは?",
@@ -266,21 +392,6 @@ var HINT = (new function(){
 					var w = $("#code")[0].contentWindow;
 					w.$(".CodeMirror").instruct({
 						string:"==の左右が一致しているかどうかを判定する条件を作ります。例えば、a==1の場合、変数aの中に1が入っていると条件に一致します。",
-						closeButton:true,
-						closedHandler:function(){
-						},
-					});
-				},
-			}});
-		},
-		"lessthan":function(key){
-			window.exec({module:"hint",command:"add",params:{
-				name:"< とは?",
-				onclick:function(){
-					plib.log.add(self.scriptName+":hint:"+key);
-					var w = $("#code")[0].contentWindow;
-					w.$(".CodeMirror").instruct({
-						string:"a < b としたときに、aよりもbの数値が大きいときに条件に一致します。aとbが同じ数値の場合には一致しません。",
 						closeButton:true,
 						closedHandler:function(){
 						},

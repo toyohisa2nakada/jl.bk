@@ -18,48 +18,74 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力 1","出力 -1","出力 -9"]);
-			window.exec({module:"input",command:"setInitial",params:{
-				pnumber:scriptName,
-				message:plib.getExpectedOutputs(),
-				value:[
-					{name:"a",initValue:["1","-1","-1"]},
-					{name:"b",initValue:["2","8" ,"-3"]},
-					{name:"c",initValue:["3","2" ,"-9"]},
-				],
-			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:2,ch:0},{line:4,ch:0}]],
 				text:"\
-\/\/ 変数a, b, cの中で最小値を出力してください。\n\
-\/\/ 例えば変数aの中身を表示する場合には、print(a); を使用します。\n\
-\n\
-\n\
-\
+\/\/ 問題は、左の入力のところに表示されます。\n\
+\/\/ \n\
+var a = [1,2,3,4,5];\n\
+var c = 8;\n\
+for(var i in a){\n\
+	if(c == a[i]){\n\
+		flag = 1;\n\
+	}\n\
+}\n\
+ \n\
+if(flag == 2){\n\
+	print(\"ない\");\n\
+}else{\n\
+	print(\"ある\");\n\
+}\
 "}});
 
 			window.exec({module:"input",command:"enable"});
-			window.exec({module:"input",command:"setReadOnly"});
+//			window.exec({module:"input",command:"setReadOnly"});
 			window.exec({module:"code",command:"enable"});
-//			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
+			HINT.hint("flag");
+			HINT.hint("equal1");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("no_else");
+			HINT.hint("a_i");
+			HINT.hint("equal");
+			HINT.hint("var");
 
-			plib.startOutputCheck();
-			problems.next();
-		},
-		function(){
-			var w = $("#code")[0].contentWindow;
-			w.$(".CodeMirror").instruct({
-				string:"この指示に従ったプログラムを作成してください。",
+			var hout = plib.getExpectedOutputHeader();
+			var outstr = "ない";
+			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
+			var instmsg = outstr+" と出力される入力データをセットしてください。<br>入力例：8";
+			window.exec({module:"input",command:"setInitial",params:{
+				pnumber:scriptName,
+				message:instmsg,
+				value:[
+					{name:"flag",initValue:""},
+				],
+			}});
+			var w = $("#input")[0].contentWindow;
+			w.$("#input").instruct({
+				string:instmsg,
 				closeButton:true,
-				closedHandler:function(){},
+				closedHandler:function(){
+				},
 			});
+			window.exec({module:"code",command:"setEvent",params:{
+				name:"afterEnd",
+				func:function(params,e){
+					var out = window.exec({module:"output",command:"outputs"});
+					if(plib.checkOutput(out,plib.getExpectedOutputs()[0])===true){
+						problems.next();
+					}
+				}
+			}});
+
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

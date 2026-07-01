@@ -5,7 +5,6 @@ new function(){
 
 	var self_n = problems.problems.push([
 		function(){
-//console.log("scriptName=\""+scriptName+"\"");
 			plib.log.add(scriptName+":startProblem");
 			window.exec({module:"main",command:"updateStatus",params:{scriptName:scriptName}});
 
@@ -19,85 +18,75 @@ new function(){
 				window.exec({module:elem,command:"autoSave",params:{pnumber:scriptName}});
 			});
 
-			plib.setExpectedOutputs(["出力<br>a<br>c<br>d"]);
+			plib.setExpectedOutputs([
+				"出力<br>ある",
+				"出力<br>ある",
+				"出力<br>ない",
+				"出力<br>ない",
+			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
+				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"a",initValue:"2"},
-					{name:"b",initValue:"3"},
+					{name:"c",initValue:["1","2","8","9"]},
 				],
 			}});
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"b"}});
-			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName,input:true}});
+			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
+			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
+				setEditable:[[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}]],
 				text:"\
-\/\/ 出力を予測してください。\n\
+\/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
+\/\/ プログラムを追加する箇所は、「2か所」です。\n\
 \/\/ \n\
+var a = [1,2,3,4,5];\n\
+var flag = 0;\n\
  \n\
-if(a == 2 && b == 3){\n\
-	print(\"a\");\n\
-}else if(a == 2){\n\
-	print(\"b\");\n\
+for(var i in a){\n\
+	\/\/ ↓プログラムの追加箇所（１）\n\
+	if(              ){\n\
+	 \/\/ ↓プログラムの追加箇所（２）\n\
+		               ;\n\
+	}\n\
 }\n\
  \n\
-if(a == 2 && b == 3){\n\
-	print(\"c\");\n\
-}\n\
-if(a == 2){\n\
-	print(\"d\");\n\
+if(flag == 1){\n\
+	print(\"ある\");\n\
+}else{\n\
+	print(\"ない\");\n\
 }\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
 			window.exec({module:"input",command:"setReadOnly"});
-			window.exec({module:"code",command:"disable"});
-			window.exec({module:"code",command:"setReadOnly"});
+			window.exec({module:"code",command:"enable"});
+			plib.startOutputCheck();
 
 			HINT.setScriptName(scriptName);
-			HINT.hint("if_elseif");
-			HINT.hint("if_if");
-			HINT.hint("and");
-
+			HINT.hint("6_1");
+			HINT.hint("6_2");
+			HINT.hint("flag");
+			HINT.hint("equal1");
+			HINT.hint("for");
+			HINT.hint("if");
+			HINT.hint("no_else");
+			HINT.hint("a_i");
+			HINT.hint("equal");
+			HINT.hint("var");
 
 			problems.next();
 		},
 		function(){
-			var w = $("#output")[0].contentWindow;
-			w.$("#inputPanel").instruct({
-				string:"出力される文字を入力して、実行してください。",
+			var w = $("#code")[0].contentWindow;
+			w.$(".CodeMirror").instruct({
+				string:"この指示に従ったプログラムを作成してください。",
 				closeButton:true,
-				closedHandler:function(){
-					$("#code")[0].contentWindow.$("#run").css("pointer-events","auto");
-					$("#code")[0].contentWindow.$("#runInterval").css("pointer-events","auto");
-					problems.next();
-				},
+				closedHandler:function(){},
 			});
-		},
-		function(){
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"beforeRun",
-				func:function(params,e){
-					var outs = $.trim(window.exec({module:"output",command:"getInput"}));
-					if(outs.length===0){
-						var w = $("#output")[0].contentWindow;
-						w.$("#inputPanel").instruct({
-							string:"出力される文字を入力してから、実行してください。",
-							closeButton:true,
-						});
-						e.preventDefault = true;
-					}else if(plib.checkOutput(outs,plib.getExpectedOutputs()[0])==false){
-						alert(errorMessages[(errorNo++)%errorMessages.length]);
-						e.preventDefault = true;
-					}
-				},
-			}});
-			window.exec({module:"code",command:"setEvent",params:{
-				name:"afterEnd",func:function(params,e){
-					problems.next();
-				},
-			}});
 		},
 		function(){
 			plib.log.add(scriptName+":finished_problem");

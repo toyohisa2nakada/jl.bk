@@ -19,33 +19,36 @@ new function(){
 			});
 
 			plib.setExpectedOutputs([
-				"出力<br>ネコではない",
-				"出力<br>ネコである",
-				"出力<br>ネコではない",
-				"出力<br>ネコである",
-				"出力<br>ネコではない",
+				"出力<br>ブラジル戦 先発",
+				"出力<br>ブラジル戦 先発ではない",
+				"出力<br>ブラジル戦 先発ではない",
+				"出力<br>ブラジル戦 先発",
+				"出力<br>ブラジル戦 先発",
 			]);
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:plib.getExpectedOutputs(),
 				value:[
-					{name:"c",initValue:["\"イヌ\"","\"マンチカン\"","\"キティちゃん\"","\"ニャンコ先生\"","\"夏目漱石\""]},
+					{name:"c",initValue:["\"堂安律\"","\"久保建英\"","\"菅原由勢\"","\"前田大然\"","\"上田綺世\""]},
 				],
 			}});
-			window.exec({module:"watch",command:"addValue",params:{name:"cats"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"players"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
-			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"starter"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:6,ch:13},{line:6,ch:22}],[{line:8,ch:4},{line:8,ch:18}],[{line:10,ch:2},{line:10,ch:16}],[{line:14,ch:11},{line:14,ch:15}]],
+				setEditable:[[{line:9,ch:13},{line:9,ch:22}],[{line:11,ch:4},{line:11,ch:18}],[{line:13,ch:2},{line:13,ch:16}],[{line:17,ch:15},{line:17,ch:19}]],
 				text:"\
 \/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
 \/\/ プログラムを追加する箇所は、「4か所」です。\n\
 \/\/ \n\
-var cats = [\"ミケネコ\",\"アメショ\",\"マンチカン\",\"ドラえもん\",\"ニャンコ先生\"];\n\
-var flag = 0;\n\
+var players = [\"鈴木彩艶\",	\"谷口彰悟\",	\"伊藤洋輝\",\n\
+	\"冨安健洋\",	\"堂安律\",	\"前田大然\",	\"中村敬斗\",	\n\
+	\"伊東純也\",	\"鎌田大地\",	\"佐野海舟\",	\"上田綺世\"];\n\
+ \n\
+var starter = 0;\n\
 \/\/           ↓プログラムの追加箇所（１）\n\
 for(var i in          ){\n\
 	\/\/ ↓プログラムの追加箇所（２）\n\
@@ -54,11 +57,11 @@ for(var i in          ){\n\
 		               ;\n\
 	}\n\
 }\n\
-\/\/        ↓プログラムの追加箇所（４）\n\
-if(flag ==     ){\n\
-	print(\"ネコである\");\n\
+\/\/            ↓プログラムの追加箇所（４）\n\
+if(starter ==     ){\n\
+	print(\"ブラジル戦 先発\");\n\
 }else{\n\
-	print(\"ネコではない\");\n\
+	print(\"ブラジル戦 先発ではない\");\n\
 }\n\
 "}});
 
@@ -72,7 +75,7 @@ if(flag ==     ){\n\
 			HINT.hint("9_2");
 			HINT.hint("9_3");
 			HINT.hint("9_4");
-			HINT.hint("flag");
+			HINT.hint("must");
 			HINT.hint("double_quotation");
 			HINT.hint("equal1");
 			HINT.hint("for");

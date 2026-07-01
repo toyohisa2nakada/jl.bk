@@ -21,18 +21,22 @@ new function(){
 			window.exec({module:"watch",command:"addValue",params:{name:"a"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"c"}});
 			window.exec({module:"watch",command:"addValue",params:{name:"i"}});
+			window.exec({module:"watch",command:"addValue",params:{name:"flag"}});
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
 				text:"\
 \/\/ 問題は、左の入力のところに表示されます。\n\
 \/\/ \n\
-var a = [1,2,3,4,5];\n\
+var a = [3,4,5];\n\
+var flag = 0;\n\
 for(var i in a){\n\
 	if(c == a[i]){\n\
-		print(\"同じ\");\n\
+		flag = 1;\n\
 	}\n\
-}\
+}\n\
+ \n\
+print(flag);\n\
 "}});
 
 			window.exec({module:"input",command:"enable"});
@@ -41,16 +45,19 @@ for(var i in a){\n\
 			window.exec({module:"code",command:"setReadOnly"});
 
 			HINT.setScriptName(scriptName);
+			HINT.hint("flag");
+			HINT.hint("equal1");
 			HINT.hint("for");
 			HINT.hint("if");
 			HINT.hint("no_else");
 			HINT.hint("a_i");
 			HINT.hint("equal");
+			HINT.hint("var");
 
 			var hout = plib.getExpectedOutputHeader();
-			var outstr = "同じ";
+			var outstr = "1";
 			plib.setExpectedOutputs([hout+"<br>"+outstr.replace(/ /g,"<br>")]);
-			var instmsg = outstr+" と出力される入力データをセットしてください。<br>入力例：8";
+			var instmsg = outstr+" と出力される入力をセットしてください。<br>入力例：2";
 			window.exec({module:"input",command:"setInitial",params:{
 				pnumber:scriptName,
 				message:instmsg,
