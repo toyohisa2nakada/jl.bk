@@ -39,7 +39,7 @@ new function(){
 			window.exec({module:"output",command:"setInitial",params:{pnumber:scriptName}});
 			window.exec({module:"scripts",command:"setScriptName",params:scriptName});
 			window.exec({module:"code",command:"setInitialText",params:{
-				setEditable:[[{line:9,ch:13},{line:9,ch:22}],[{line:11,ch:4},{line:11,ch:18}],[{line:13,ch:2},{line:13,ch:16}],[{line:17,ch:15},{line:17,ch:19}]],
+				setEditable:[[{line:9,ch:13},{line:9,ch:22}],[{line:11,ch:4},{line:11,ch:18}],[{line:13,ch:2},{line:13,ch:16}],[{line:17,ch:14},{line:17,ch:18}]],
 				text:"\
 \/\/ それぞれの入力に対して正しく出力するプログラムを完成させてください。\n\
 \/\/ プログラムを追加する箇所は、「4か所」です。\n\
